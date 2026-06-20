@@ -1009,9 +1009,9 @@
       showObStep(2, txt);
 
     } else if (obStep === 2) {
-      speechSynthesis.cancel();
+      stopAudio();
       document.getElementById('onboardingOverlay').style.display = 'none';
-      startSession();
+      startTest();
     }
   }
 
@@ -1216,6 +1216,244 @@
     mediaRecorder = null;
   }
 
+  // ── Banco de questões ────────────────────────────────────────
+  const TEST_QUESTIONS = [
+    // ── Múltipla Escolha ─────────────────────────────────────
+    { id:'q1', type:'mc', text:'Com que frequência você usa ferramentas de IA no seu trabalho?',
+      options:['Raramente ou nunca','Algumas vezes por semana','Todos os dias para tarefas pontuais','É parte central do meu fluxo diário','Construo soluções de IA para outros usarem'] },
+    { id:'q2', type:'mc', text:'Qual das opções descreve melhor como você escreve prompts para IA?',
+      options:['Frases curtas e diretas, sem estrutura','Defino persona, contexto e formato de saída','Crio System Prompts com variáveis e instruções complexas','Desenvolvo prompts de orquestração para agentes autônomos','O prompt é secundário — foco em fine-tuning e arquitetura'] },
+    { id:'q3', type:'mc', text:'Qual é o seu nível de uso de automação com IA?',
+      options:['Não uso automações','Uso ferramentas prontas (Zapier básico, integrações nativas)','Crio automações no-code / low-code (n8n, Make, Zapier avançado)','Desenvolvo agentes autônomos com LangChain, CrewAI ou similares','Arquiteto sistemas multi-agente em produção'] },
+    { id:'q4', type:'mc', text:'Como você lida com alucinações e erros das IAs?',
+      options:['Aceito as respostas sem questionar muito','Verifico informações críticas em outras fontes','Implemento loops de validação e tratamento de erros nos fluxos','Desenvolvo benchmarks para avaliar qualidade em escala','Defino métricas e governança de qualidade para toda a organização'] },
+    { id:'q5', type:'mc', text:'Qual das ações abaixo você já realizou?',
+      options:['Usei ChatGPT para escrever textos ou tirar dúvidas','Integrei IA a planilhas, e-mails ou ferramentas do dia a dia','Conectei APIs de LLMs a outras ferramentas via código ou plataformas','Implementei RAG (busca em documentos próprios) ou function calling','Fiz fine-tuning de um modelo de linguagem aberto'] },
+    { id:'q6', type:'mc', text:'Como a IA impacta seu trabalho hoje?',
+      options:['Pouco ou nenhum impacto ainda','Me ajuda a fazer tarefas existentes mais rápido','Automatizou processos inteiros, liberando tempo para estratégia','Criei novos produtos ou serviços que não existiriam sem IA','Influencio a estratégia de IA da minha organização ou mercado'] },
+    { id:'q7', type:'mc', text:'Qual conceito ou ferramenta você domina melhor?',
+      options:['ChatGPT, Gemini, Claude (interfaces web)','Engenharia de prompt, few-shot, chain-of-thought','APIs de LLMs, embeddings, bancos vetoriais','Agentes autônomos, RAG, function calling, orquestração','Fine-tuning, RLHF, hiperparâmetros, arquitetura de modelos'] },
+    { id:'q8', type:'mc', text:'Quando usa IA para resolver um problema complexo, como age?',
+      options:['Peço a resposta diretamente e uso o que vier','Faço múltiplas tentativas refinando o prompt','Estruturo uma cadeia de prompts ou crio um fluxo automatizado','Delego sub-tarefas a agentes especializados com memória e ferramentas','Defino arquitetura, escolho modelos e cuido da infraestrutura'] },
+
+    // ── Cases ─────────────────────────────────────────────────
+    { id:'c1', type:'case', timer:130,
+      text:'Você é gestor de marketing em uma empresa de médio porte. Seu maior concorrente acabou de lançar uma campanha viral usando IA generativa para criar conteúdo personalizado em escala. Sua equipe tem 3 pessoas — nenhuma técnica — e 2 semanas para reagir. Como você usaria IA para montar uma resposta competitiva? Detalhe as ferramentas, o processo e como mediria o resultado.' },
+    { id:'c2', type:'case', timer:130,
+      text:'Sua empresa recebeu 500 currículos para uma vaga de engenheiro sênior. O RH tem 3 dias para fazer a triagem inicial. A diretora de pessoas pediu sua ajuda para usar IA no processo. Que solução você desenharia do início ao fim? Considere os riscos éticos, como mitigá-los e quais critérios seriam avaliados automaticamente vs. por humanos.' },
+
+    // ── Review Reverso ─────────────────────────────────────────
+    { id:'r1', type:'review',
+      text:'Analise o prompt abaixo e identifique todos os problemas. Como você o reescreveria para obter um resultado muito melhor?',
+      artifact:'Faça um resumo do documento anexo e liste os pontos principais.' },
+    { id:'r2', type:'review',
+      text:'Analise o fluxo de automação abaixo e aponte o que pode dar errado. Que salvaguardas você adicionaria?',
+      artifact:'1. Usuário envia e-mail\n2. IA lê o conteúdo do e-mail\n3. IA gera uma resposta completa\n4. Sistema envia a resposta automaticamente sem revisão humana' },
+  ];
+
+  let testAnswers  = [];
+  let currentQ     = -1;
+  let caseTimerID  = null;
+  let caseSecsLeft = 0;
+
+  function startTest() {
+    currentQ = 0;
+    showTestQuestion(0);
+  }
+
+  function showTestQuestion(idx) {
+    if (idx >= TEST_QUESTIONS.length) { submitTest(); return; }
+    const q = TEST_QUESTIONS[idx];
+    const total = TEST_QUESTIONS.length;
+    const tag = { mc:'Múltipla Escolha', case:'Case', review:'Review Reverso' }[q.type];
+
+    // Atualiza progresso no header
+    document.getElementById('sessionTag').textContent = `${idx + 1} / ${total}`;
+
+    // Mensagem ARIA com a pergunta
+    const prefix = q.type === 'mc'
+      ? `<span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--pulse);letter-spacing:.08em;">${tag}</span><br><br>`
+      : q.type === 'case'
+      ? `<span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--alert);letter-spacing:.08em;">CASE — você tem 2 min 10 seg</span><br><br>`
+      : `<span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--score);letter-spacing:.08em;">REVIEW REVERSO</span><br><br>`;
+
+    appendAriaMsg(prefix + escapeHtml(q.text).replace(/\n/g,'<br>'));
+
+    // Se tem artefato (review), mostra bloco de código
+    if (q.artifact) {
+      const msgs = document.getElementById('messages');
+      const art = document.createElement('div');
+      art.style.cssText = 'margin:0 0 0 44px;background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--score);border-radius:10px;padding:14px 16px;font-family:"DM Mono",monospace;font-size:13px;color:var(--fog);line-height:1.6;white-space:pre-wrap;';
+      art.textContent = q.artifact;
+      msgs.appendChild(art);
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    // Renderiza input adequado
+    renderQuestionInput(q);
+
+    // TTS da pergunta
+    fetchAudio(q.text).then(audio => { if (audio) audio.play().catch(()=>{}); });
+  }
+
+  function renderQuestionInput(q) {
+    const area = document.querySelector('.input-area');
+    if (q.type === 'mc') {
+      area.innerHTML = `
+        <div style="padding:12px 24px 20px;display:flex;flex-direction:column;gap:8px;" id="mcOptions">
+          ${q.options.map((opt, i) => `
+            <button onclick="selectMC(${i},'${q.id}','${escapeAttr(opt)}')"
+              style="text-align:left;padding:12px 16px;border-radius:10px;border:1px solid var(--border);
+                     background:var(--panel);color:var(--fog);font-family:'Plus Jakarta Sans',sans-serif;
+                     font-size:14px;cursor:pointer;transition:border-color .2s,color .2s,background .2s;"
+              onmouseover="this.style.borderColor='var(--pulse-border)';this.style.color='var(--white)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--fog)'">
+              <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--pulse);margin-right:10px;">${String.fromCharCode(65+i)})</span>${escapeHtml(opt)}
+            </button>`).join('')}
+        </div>`;
+    } else if (q.type === 'case') {
+      area.innerHTML = `
+        <div style="padding:12px 24px 20px;display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);">tempo restante</div>
+            <div id="caseTimer" style="font-family:'DM Mono',monospace;font-size:20px;color:var(--alert);font-weight:600;">2:10</div>
+          </div>
+          <textarea id="caseInput" class="ob-input" rows="4"
+            placeholder="Descreva sua solução aqui... ou grave um áudio abaixo."
+            style="resize:vertical;"></textarea>
+          <div class="record-row">
+            <button class="btn-record" id="btnRecord" onclick="toggleRecord()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><line x1="12" y1="19" x2="12" y2="22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              Gravar resposta
+            </button>
+            <div class="rec-indicator" id="recIndicator"><div class="rec-dot"></div><span id="recTimer">0:00</span></div>
+          </div>
+          <div class="rec-note" id="recNote"></div>
+          <button onclick="submitCaseOrReview('${q.id}','case')"
+            style="padding:14px;border-radius:12px;border:none;background:var(--pulse);color:var(--ink);
+                   font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">
+            Enviar resposta →
+          </button>
+        </div>`;
+      startCaseTimer(q.id);
+    } else if (q.type === 'review') {
+      area.innerHTML = `
+        <div style="padding:12px 24px 20px;display:flex;flex-direction:column;gap:10px;">
+          <textarea id="reviewInput" class="ob-input" rows="5"
+            placeholder="Descreva os problemas que encontrou e como você melhoraria..."
+            style="resize:vertical;"></textarea>
+          <div class="record-row">
+            <button class="btn-record" id="btnRecord" onclick="toggleRecord()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><line x1="12" y1="19" x2="12" y2="22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              Gravar análise
+            </button>
+            <div class="rec-indicator" id="recIndicator"><div class="rec-dot"></div><span id="recTimer">0:00</span></div>
+          </div>
+          <div class="rec-note" id="recNote"></div>
+          <button onclick="submitCaseOrReview('${q.id}','review')"
+            style="padding:14px;border-radius:12px;border:none;background:var(--score);color:var(--ink);
+                   font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">
+            Enviar análise →
+          </button>
+        </div>`;
+    }
+    document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+  }
+
+  function selectMC(optIdx, qId, optText) {
+    clearCaseTimer();
+    stopRecord();
+
+    const q = TEST_QUESTIONS[currentQ];
+    const label = String.fromCharCode(65 + optIdx);
+    testAnswers.push({ question_id: qId, question_type: 'mc', question_text: q.text, answer_text: optText, option_label: label });
+
+    appendUserMsg(`${label}) ${optText}`);
+    currentQ++;
+    setTimeout(() => showTestQuestion(currentQ), 600);
+  }
+
+  function submitCaseOrReview(qId, type) {
+    clearCaseTimer();
+    stopRecord();
+
+    const inputId = type === 'case' ? 'caseInput' : 'reviewInput';
+    const val = (document.getElementById(inputId)?.value || '').trim();
+    if (!val) { alert('Por favor, escreva ou grave sua resposta antes de continuar.'); return; }
+
+    const q = TEST_QUESTIONS[currentQ];
+    testAnswers.push({ question_id: qId, question_type: type, question_text: q.text, answer_text: val });
+    appendUserMsg(val);
+    currentQ++;
+    setTimeout(() => showTestQuestion(currentQ), 600);
+  }
+
+  function startCaseTimer(qId) {
+    clearCaseTimer();
+    caseSecsLeft = 130;
+    function tick() {
+      const el = document.getElementById('caseTimer');
+      if (!el) return;
+      const m = Math.floor(caseSecsLeft / 60);
+      const s = String(caseSecsLeft % 60).padStart(2, '0');
+      el.textContent = `${m}:${s}`;
+      el.style.color = caseSecsLeft <= 30 ? '#FF3B3B' : 'var(--alert)';
+      if (caseSecsLeft <= 0) {
+        clearCaseTimer();
+        submitCaseOrReview(qId, 'case');
+        return;
+      }
+      caseSecsLeft--;
+      caseTimerID = setTimeout(tick, 1000);
+    }
+    tick();
+  }
+
+  function clearCaseTimer() {
+    if (caseTimerID) { clearTimeout(caseTimerID); caseTimerID = null; }
+  }
+
+  function appendAriaMsg(htmlContent) {
+    const msgs = document.getElementById('messages');
+    const div = document.createElement('div');
+    div.className = 'msg aria';
+    div.innerHTML = `<div class="avatar">[A]</div><div class="bubble">${htmlContent}</div>`;
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function appendUserMsg(text) {
+    const msgs = document.getElementById('messages');
+    const div = document.createElement('div');
+    div.className = 'msg user';
+    div.innerHTML = `<div class="avatar">EU</div><div class="bubble">${escapeHtml(text)}</div>`;
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  async function submitTest() {
+    document.querySelector('.input-area').innerHTML = `
+      <div style="padding:20px 24px;text-align:center;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);">
+        analisando suas respostas...
+      </div>`;
+    appendAriaMsg('Perfeito! Recebi todas as suas respostas. Estou analisando seu perfil de maturidade em IA agora — isso leva alguns segundos.');
+    fetchAudio('Perfeito! Recebi todas as suas respostas. Estou analisando seu perfil de maturidade em IA agora.').then(a => { if(a) a.play().catch(()=>{}); });
+
+    try {
+      const res = await fetch(`${API_BASE}/nivel-ia/evaluate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome: userName, answers: testAnswers }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const result = await res.json();
+      setTimeout(() => showResult(result), 800);
+    } catch (e) {
+      appendAriaMsg('Ocorreu um erro ao processar sua avaliação. Por favor, recarregue a página.');
+      console.error(e);
+    }
+  }
+
   function autoResize(el) {
     el.style.height = 'auto';
     el.style.height = Math.min(el.scrollHeight, 120) + 'px';
@@ -1329,88 +1567,71 @@
 
   function showResult(result) {
     const overlay = document.getElementById('resultOverlay');
-    const card = document.getElementById('resultCard');
+    const card    = document.getElementById('resultCard');
+    const nivel   = result.nivel || '?';
+    const titulo  = result.titulo || '';
+    const resumo  = result.resumo || '';
+    const proximo = result.proximo_passo || '';
 
-    const dimNames = {
-      consciencia: 'Consciência',
-      uso: 'Uso',
-      profundidade: 'Profundidade',
-      integracao: 'Integração',
-      mentalidade: 'Mentalidade',
-    };
-
-    const dimsHtml = Object.entries(result.dimensoes || {}).map(([key, val]) => {
-      const cls = val < 40 ? 'low' : val < 70 ? 'mid' : 'high';
-      return `
-        <div class="dim-row">
-          <div class="dim-header">
-            <span class="dim-name">${dimNames[key] || key}</span>
-            <span class="dim-score">${val}</span>
-          </div>
-          <div class="dim-bar-track">
-            <div class="dim-bar-fill ${cls}" data-target="${val}"></div>
-          </div>
-        </div>
-      `;
-    }).join('');
-
-    const destaquesHtml = (result.destaques || []).map(d => `<li>${escapeHtml(d)}</li>`).join('');
-    const proximosHtml  = (result.proximos_passos || []).map(d => `<li>${escapeHtml(d)}</li>`).join('');
+    // Barra de progresso visual (nivel/5)
+    const pct = Math.round((nivel / 5) * 100);
+    const barColor = nivel <= 2 ? 'var(--alert)' : nivel === 3 ? 'var(--pulse)' : 'var(--score)';
 
     card.innerHTML = `
       <div class="result-level-badge">
-        <span class="level-num">NÍVEL ${result.nivel}</span>
-        <span class="level-name">${result.nivel_nome}</span>
+        <span class="level-num">NÍVEL ${nivel}</span>
+        <span class="level-name">${escapeHtml(titulo)}</span>
       </div>
-      <div class="result-score-big">${result.score_total}</div>
-      <div class="result-score-label">/ 100 · score geral</div>
-      <div class="result-desc">${escapeHtml(result.descricao)}</div>
 
-      <div class="result-section-title">Dimensões</div>
-      <div class="dimensions">${dimsHtml}</div>
+      <div class="result-score-big">${nivel}<span style="font-size:32px;color:var(--muted)">/5</span></div>
+      <div class="result-score-label">nível de maturidade em IA</div>
 
-      ${destaquesHtml ? `
-        <div class="result-section-title">Pontos fortes</div>
-        <ul class="result-list">${destaquesHtml}</ul>
-      ` : ''}
+      <div class="dim-bar-track" style="margin:16px 0 24px;">
+        <div class="dim-bar-fill" style="width:0%;background:${barColor};" data-target="${pct}"></div>
+      </div>
 
-      ${proximosHtml ? `
-        <div class="result-section-title">Próximos passos</div>
-        <ul class="result-list">${proximosHtml}</ul>
-      ` : ''}
+      <div class="result-section-title">Análise</div>
+      <div class="result-desc">${escapeHtml(resumo)}</div>
+
+      <div class="result-section-title" style="margin-top:20px;">Próximo passo</div>
+      <ul class="result-list"><li>${escapeHtml(proximo)}</li></ul>
 
       <div class="result-actions">
         <button class="btn-restart" onclick="restart()">Refazer avaliação</button>
-        <button class="btn-share" onclick="copyResult(${result.score_total}, '${result.nivel_nome}')">Copiar resultado</button>
+        <button class="btn-share" onclick="copyResult(${nivel}, '${escapeAttr(titulo)}')">Copiar resultado</button>
       </div>
     `;
 
     overlay.style.display = 'flex';
-
-    // Anima barras com delay
     setTimeout(() => {
-      card.querySelectorAll('.dim-bar-fill').forEach(bar => {
-        bar.style.width = bar.dataset.target + '%';
-      });
+      card.querySelectorAll('.dim-bar-fill').forEach(b => { b.style.width = b.dataset.target + '%'; });
     }, 200);
+
+    // ARIA narra o resultado
+    const narration = `Pronto, ${userName}! Você está no Nível ${nivel} — ${titulo}. ${resumo}`;
+    fetchAudio(narration).then(a => { if(a) a.play().catch(()=>{}); });
   }
 
   function restart() {
     document.getElementById('resultOverlay').style.display = 'none';
     document.getElementById('messages').innerHTML = '';
-    history = [];
-    turnCount = 0;
-    disableInput();
-    startSession();
+    testAnswers = [];
+    currentQ    = -1;
+    document.getElementById('sessionTag').textContent = 'SESSÃO ATIVA';
+    startTest();
   }
 
-  function copyResult(score, nivel) {
-    const text = `Fiz a avaliação de nível de IA da Huski e tirei ${score}/100 — Nível: ${nivel}. huski.ai`;
+  function copyResult(nivel, titulo) {
+    const text = `Fiz a avaliação de nível de IA da Huski — Nível ${nivel}/5: ${titulo}. huski.ai`;
     navigator.clipboard.writeText(text).then(() => {
       const btn = document.querySelector('.btn-share');
       btn.textContent = 'Copiado ✓';
       setTimeout(() => btn.textContent = 'Copiar resultado', 2000);
     });
+  }
+
+  function escapeAttr(str) {
+    return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
   }
 
   function escapeHtml(str) {

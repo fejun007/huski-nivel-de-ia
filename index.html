@@ -405,6 +405,44 @@
     margin-top: 1px;
   }
 
+  .result-questions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .result-question-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    background: var(--panel);
+  }
+  .result-question-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--pulse);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }
+  .result-question-text {
+    font-size: 13px;
+    color: var(--fog);
+    margin-bottom: 8px;
+    line-height: 1.5;
+  }
+  .result-question-answer {
+    font-size: 13px;
+    color: var(--white);
+    margin-bottom: 6px;
+    line-height: 1.5;
+  }
+  .result-question-feedback {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
   .result-actions {
     display: flex;
     gap: 10px;
@@ -1785,11 +1823,36 @@ Nível 5: Propõe arquitetura com validação automática cruzando com fonte de 
     const nivel   = result.nivel || '?';
     const titulo  = result.titulo || '';
     const resumo  = result.resumo || '';
-    const proximo = result.proximo_passo || '';
+    const questoes = result.questoes || [];
+    const passos  = result.proximos_passos && result.proximos_passos.length
+      ? result.proximos_passos
+      : (result.proximo_passo ? [result.proximo_passo] : []);
 
     // Barra de progresso visual (nivel/5)
     const pct = Math.round((nivel / 5) * 100);
     const barColor = nivel <= 2 ? 'var(--alert)' : nivel === 3 ? 'var(--pulse)' : 'var(--score)';
+
+    const tipoLabel = { mc: 'Múltipla Escolha', case: 'Case', review: 'Review Reverso' };
+
+    const questoesHtml = questoes.map((q, idx) => {
+      const tipo = tipoLabel[q.tipo] || q.tipo || '';
+      if (q.tipo === 'mc') {
+        return `
+          <div class="result-question-card">
+            <div class="result-question-tag">${idx + 1}. ${tipo}</div>
+            <div class="result-question-text">${escapeHtml(q.pergunta || '')}</div>
+            <div class="result-question-answer"><strong>Sua resposta:</strong> ${escapeHtml(q.resposta_usuario || '')}</div>
+            ${q.gabarito ? `<div class="result-question-feedback"><strong>Gabarito:</strong> ${escapeHtml(q.gabarito)}</div>` : ''}
+          </div>`;
+      }
+      return `
+        <div class="result-question-card">
+          <div class="result-question-tag">${idx + 1}. ${tipo}${q.nota_nivel ? ` — nota: nível ${escapeHtml(String(q.nota_nivel))}` : ''}</div>
+          <div class="result-question-text">${escapeHtml(q.pergunta || '')}</div>
+          <div class="result-question-answer"><strong>Sua resposta:</strong> ${escapeHtml(q.resposta_usuario || '')}</div>
+          ${q.critica ? `<div class="result-question-feedback"><strong>Crítica da IA:</strong> ${escapeHtml(q.critica)}</div>` : ''}
+        </div>`;
+    }).join('');
 
     card.innerHTML = `
       <div class="result-level-badge">
@@ -1807,8 +1870,12 @@ Nível 5: Propõe arquitetura com validação automática cruzando com fonte de 
       <div class="result-section-title">Análise</div>
       <div class="result-desc">${escapeHtml(resumo)}</div>
 
-      <div class="result-section-title" style="margin-top:20px;">Próximo passo</div>
-      <ul class="result-list"><li>${escapeHtml(proximo)}</li></ul>
+      ${questoesHtml ? `
+      <div class="result-section-title" style="margin-top:20px;">Detalhamento por questão</div>
+      <div class="result-questions-list">${questoesHtml}</div>` : ''}
+
+      <div class="result-section-title" style="margin-top:20px;">Próximos passos</div>
+      <ul class="result-list">${passos.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>
 
       <div class="result-actions">
         <button class="btn-restart" onclick="restart()">Refazer avaliação</button>

@@ -455,65 +455,128 @@
   }
   .app { position: relative; z-index: 1; }
 
-  /* ── Config overlay ──────────────────────────────────────────── */
-  .config-overlay {
+  /* ── Onboarding overlay ──────────────────────────────────────── */
+  .onboarding-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(15,15,15,0.96);
+    background: var(--ink);
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 24px;
     z-index: 200;
   }
-  .config-card {
-    background: var(--slate);
-    border: 1px solid var(--border);
-    border-top: 3px solid var(--pulse);
-    border-radius: 16px;
-    padding: 32px;
-    max-width: 440px;
+  .onboarding-card {
     width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
   }
-  .config-card h2 {
+  .ob-brand {
     font-size: 20px;
-    font-weight: 700;
-    margin-bottom: 6px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    align-self: flex-start;
   }
-  .config-card p {
-    color: var(--fog);
-    font-size: 14px;
-    margin-bottom: 24px;
-    line-height: 1.6;
-  }
-  .config-card label {
-    display: block;
+  .ob-brand span { color: var(--pulse); opacity: 0.7; }
+
+  .aria-orb {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #00D4FF 0%, #7B2FBE 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 0.06em;
-    margin-bottom: 8px;
-    text-transform: uppercase;
+    font-size: 20px;
+    font-weight: 500;
+    color: #fff;
+    flex-shrink: 0;
+    animation: orbIdle 3s ease-in-out infinite;
+    transition: animation 0.2s;
   }
-  .config-card input {
+  @keyframes orbIdle {
+    0%,100% { box-shadow: 0 0 0 0 #00D4FF30; }
+    50%      { box-shadow: 0 0 0 14px #00D4FF00; }
+  }
+  .aria-orb.speaking {
+    animation: orbSpeak 0.5s ease-in-out infinite;
+  }
+  @keyframes orbSpeak {
+    0%,100% { box-shadow: 0 0 0 0 #00D4FF50; transform: scale(1); }
+    50%      { box-shadow: 0 0 0 18px #00D4FF00; transform: scale(1.04); }
+  }
+
+  .speech-bubble {
     width: 100%;
     background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 14px;
-    color: var(--white);
-    font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    outline: none;
-    margin-bottom: 20px;
-    transition: border-color 0.2s;
+    border-radius: 16px;
+    padding: 20px 22px;
+    min-height: 90px;
   }
-  .config-card input:focus { border-color: var(--pulse-border); }
-  .config-card input::placeholder { color: var(--muted); }
-  .btn-start {
+  .speech-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--pulse);
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+  }
+  .speech-text {
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--white);
+  }
+  .cursor-blink {
+    display: inline-block;
+    width: 2px;
+    height: 14px;
+    background: var(--pulse);
+    margin-left: 2px;
+    vertical-align: middle;
+    animation: blink 0.8s step-end infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  .ob-input-group {
     width: 100%;
-    padding: 14px;
-    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    pointer-events: none;
+  }
+  .ob-input-group.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: all;
+  }
+  .ob-input {
+    width: 100%;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    color: var(--white);
+    outline: none;
+    resize: none;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+  }
+  .ob-input:focus { border-color: var(--pulse); }
+  .ob-input::placeholder { color: var(--muted); }
+
+  .btn-ob {
+    width: 100%;
+    padding: 15px;
+    border-radius: 12px;
     border: none;
     background: var(--pulse);
     color: var(--ink);
@@ -521,34 +584,61 @@
     font-size: 15px;
     font-weight: 700;
     cursor: pointer;
-    transition: opacity 0.2s;
+    transition: opacity 0.2s, transform 0.1s;
+    opacity: 0;
+    pointer-events: none;
   }
-  .btn-start:hover { opacity: 0.85; }
-  .config-note {
-    margin-top: 12px;
-    font-size: 12px;
-    color: var(--muted);
-    text-align: center;
+  .btn-ob.show {
+    opacity: 1;
+    pointer-events: all;
   }
+  .btn-ob:hover { opacity: 0.88; transform: translateY(-1px); }
+
+  .ob-dots {
+    display: flex;
+    gap: 6px;
+  }
+  .ob-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: background 0.35s, transform 0.35s;
+  }
+  .ob-dot.on { background: var(--pulse); transform: scale(1.3); }
 </style>
 </head>
 <body>
 
-<!-- Config Overlay -->
-<div class="config-overlay" id="configOverlay">
-  <div class="config-card">
-    <div style="margin-bottom:20px">
-      <span style="font-size:22px;font-weight:800;letter-spacing:-0.02em">
-        <span style="color:#00D4FF;opacity:0.7">[</span>H<span style="color:#00D4FF;opacity:0.7">]</span>
-        <span style="font-size:18px;font-weight:700"> huski</span>
-      </span>
+<!-- Onboarding Overlay -->
+<div class="onboarding-overlay" id="onboardingOverlay">
+  <div class="onboarding-card">
+
+    <div class="ob-brand">
+      <span>[</span>H<span>]</span> huski
     </div>
-    <h2>Avalie seu nível de IA</h2>
-    <p>Uma conversa rápida com ARIA, nossa assessora. Sem testes formais — só perguntas reais. No fim, você recebe uma análise do seu momento atual com IA.</p>
-    <label>URL do backend</label>
-    <input type="text" id="apiUrl" placeholder="https://seu-backend.railway.app" value="https://huski-nivel-de-ia-production.up.railway.app" />
-    <button class="btn-start" onclick="startSession()">Iniciar avaliação →</button>
-    <div class="config-note">~5 minutos · sem resposta certa ou errada</div>
+
+    <div class="ob-dots">
+      <div class="ob-dot on"  id="dot0"></div>
+      <div class="ob-dot"     id="dot1"></div>
+      <div class="ob-dot"     id="dot2"></div>
+    </div>
+
+    <div class="aria-orb" id="ariaOrb">A</div>
+
+    <div class="speech-bubble">
+      <div class="speech-label">ARIA</div>
+      <div class="speech-text" id="speechText"></div>
+    </div>
+
+    <div class="ob-input-group" id="obInputGroup">
+      <input class="ob-input" type="text" id="obInput"
+             placeholder="Digite aqui..." maxlength="80"
+             onkeydown="if(event.key==='Enter') obNext()" />
+    </div>
+
+    <button class="btn-ob" id="btnOb" onclick="obNext()">Continuar →</button>
+
   </div>
 </div>
 
@@ -597,13 +687,171 @@
 </div>
 
 <script>
-  let API_BASE = '';
+  const API_BASE = 'https://huski-nivel-de-ia-production.up.railway.app';
   let history = [];
   let turnCount = 0;
+  let userName = '';
+  let obStep = 0;
+  let ttsReady = false;
 
-  // ── Auto-detect saved URL ─────────────────────────────────────
-  const saved = localStorage.getItem('huski_nivel_ia_url');
-  if (saved) document.getElementById('apiUrl').value = saved;
+  // ── TTS setup ─────────────────────────────────────────────────
+  let ptVoice = null;
+  function loadVoices() {
+    const voices = speechSynthesis.getVoices();
+    ptVoice =
+      voices.find(v => v.lang === 'pt-BR' && /female|feminina/i.test(v.name)) ||
+      voices.find(v => v.lang === 'pt-BR') ||
+      voices.find(v => v.lang.startsWith('pt')) ||
+      null;
+    ttsReady = true;
+  }
+  speechSynthesis.addEventListener('voiceschanged', loadVoices);
+  loadVoices();
+
+  function speak(text, onEnd) {
+    if (!window.speechSynthesis) { onEnd && onEnd(); return; }
+    speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.lang  = 'pt-BR';
+    utt.rate  = 0.97;
+    utt.pitch = 1.12;
+    if (ptVoice) utt.voice = ptVoice;
+    const orb = document.getElementById('ariaOrb');
+    utt.onstart = () => orb && orb.classList.add('speaking');
+    utt.onend   = () => { orb && orb.classList.remove('speaking'); onEnd && onEnd(); };
+    utt.onerror = () => { orb && orb.classList.remove('speaking'); onEnd && onEnd(); };
+    speechSynthesis.speak(utt);
+  }
+
+  // ── Typewriter ────────────────────────────────────────────────
+  function typeWriter(text, el, speed, onDone) {
+    el.innerHTML = '';
+    let i = 0;
+    const cursor = document.createElement('span');
+    cursor.className = 'cursor-blink';
+    el.appendChild(cursor);
+    const timer = setInterval(() => {
+      if (i < text.length) {
+        el.insertBefore(document.createTextNode(text[i++]), cursor);
+      } else {
+        clearInterval(timer);
+        cursor.remove();
+        onDone && onDone();
+      }
+    }, speed);
+  }
+
+  // ── Onboarding steps ─────────────────────────────────────────
+  const OB_SCRIPTS = [
+    {
+      text: 'Olá! Seja muito bem-vindo à avaliação de maturidade em IA da Huski. Meu nome é ARIA e vou te acompanhar nessa jornada. Essa avaliação foi criada para mapear exatamente em qual estágio de uso de inteligência artificial você está hoje — sem julgamentos e sem respostas certas ou erradas. Antes de começarmos… como posso te chamar?',
+      inputType: 'text',
+      placeholder: 'Seu nome',
+      btn: 'Continuar →',
+      dot: 0,
+    },
+    {
+      text: '', // preenchido dinamicamente com o nome
+      inputType: 'textarea',
+      placeholder: 'Me conta sua experiência com IA...',
+      btn: 'Continuar →',
+      dot: 1,
+    },
+    {
+      text: '', // preenchido dinamicamente
+      inputType: null,
+      btn: 'Estou pronto! →',
+      dot: 2,
+    },
+  ];
+
+  function setDot(idx) {
+    [0,1,2].forEach(i => {
+      document.getElementById('dot'+i).classList.toggle('on', i === idx);
+    });
+  }
+
+  function showObStep(stepIdx, extraText) {
+    const step = OB_SCRIPTS[stepIdx];
+    const el   = document.getElementById('speechText');
+    const inp  = document.getElementById('obInputGroup');
+    const btn  = document.getElementById('btnOb');
+    const obIn = document.getElementById('obInput');
+
+    setDot(step.dot);
+    inp.classList.remove('show');
+    btn.classList.remove('show');
+
+    const scriptText = extraText || step.text;
+    typeWriter(scriptText, el, 22, () => {
+      // Mostra input/botão após terminar de digitar
+      if (step.inputType) {
+        if (step.inputType === 'textarea') {
+          inp.innerHTML = `<textarea class="ob-input" id="obInput" rows="3"
+            placeholder="${step.placeholder}"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();obNext()}"></textarea>`;
+        } else {
+          inp.innerHTML = `<input class="ob-input" type="text" id="obInput"
+            placeholder="${step.placeholder}" maxlength="80"
+            onkeydown="if(event.key==='Enter') obNext()" />`;
+        }
+        setTimeout(() => {
+          inp.classList.add('show');
+          btn.textContent = step.btn;
+          btn.classList.add('show');
+          document.getElementById('obInput')?.focus();
+        }, 200);
+      } else {
+        inp.classList.remove('show');
+        setTimeout(() => {
+          btn.textContent = step.btn;
+          btn.classList.add('show');
+        }, 200);
+      }
+    });
+
+    speak(scriptText);
+  }
+
+  async function obNext() {
+    const obIn = document.getElementById('obInput');
+    const val  = obIn ? obIn.value.trim() : '';
+
+    if (obStep === 0) {
+      if (!val) { obIn.focus(); return; }
+      userName = val;
+      obStep = 1;
+      const txt = `Prazer te conhecer, ${userName}! Agora me conta uma coisa: o que você já fez com inteligência artificial? Pode ser qualquer coisa — desde usar o ChatGPT para escrever um e-mail até criar automações ou sistemas mais complexos. Não existe resposta errada aqui!`;
+      showObStep(1, txt);
+
+    } else if (obStep === 1) {
+      if (!val) { obIn.focus(); return; }
+      const iaExperience = val;
+      obStep = 2;
+
+      // Salva sessão no backend
+      try {
+        await fetch(`${API_BASE}/session/create`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome: userName, resposta_inicial: iaExperience }),
+        });
+      } catch (_) {}
+
+      const txt = `Perfeito, ${userName}! Já tenho um ótimo contexto sobre você. A avaliação combina questões de múltipla escolha, perguntas abertas e alguns desafios práticos — deve levar entre 8 e 12 minutos. Tudo pronto para começar?`;
+      showObStep(2, txt);
+
+    } else if (obStep === 2) {
+      speechSynthesis.cancel();
+      document.getElementById('onboardingOverlay').style.display = 'none';
+      startSession();
+    }
+  }
+
+  // Inicia o onboarding assim que a página carrega
+  window.addEventListener('load', () => {
+    setTimeout(() => showObStep(0), 400);
+  });
 
   function autoResize(el) {
     el.style.height = 'auto';
@@ -618,24 +866,17 @@
   }
 
   async function startSession() {
-    const url = document.getElementById('apiUrl').value.trim().replace(/\/$/, '');
-    if (!url) { alert('Informe a URL do backend.'); return; }
-    API_BASE = url;
-    localStorage.setItem('huski_nivel_ia_url', url);
-
-    document.getElementById('configOverlay').style.display = 'none';
-
     showTyping();
     try {
       const res = await fetch(`${API_BASE}/nivel-ia/start`, { method: 'POST' });
       const data = await res.json();
       removeTyping();
-      appendMessage('aria', data.reply);
-      history.push({ role: 'assistant', content: data.reply });
+      appendMessage('aria', data.message);
+      history.push({ role: 'assistant', content: data.message });
       enableInput();
     } catch (e) {
       removeTyping();
-      appendMessage('aria', 'Não consegui conectar ao backend. Verifique a URL e tente novamente.');
+      appendMessage('aria', `Olá, ${userName || 'bem-vindo'}! Tive um problema ao conectar. Tente recarregar a página.`);
     }
   }
 
@@ -662,9 +903,9 @@
       const data = await res.json();
       removeTyping();
 
-      if (data.reply) {
-        appendMessage('aria', data.reply);
-        history.push({ role: 'assistant', content: data.reply });
+      if (data.message) {
+        appendMessage('aria', data.message);
+        history.push({ role: 'assistant', content: data.message });
       }
 
       if (data.finished && data.result) {

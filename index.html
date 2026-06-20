@@ -663,6 +663,61 @@
   }
   .btn-ob:hover { opacity: 0.88; transform: translateY(-1px); }
 
+  /* ── Gravação de áudio ──────────────────────────────────────── */
+  .record-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+  .btn-record {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--fog);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+  }
+  .btn-record:hover { border-color: var(--pulse-border); color: var(--white); }
+  .btn-record.recording {
+    border-color: #FF6B35;
+    background: #FF6B3510;
+    color: #FF6B35;
+  }
+  .rec-indicator {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: #FF6B35;
+  }
+  .rec-indicator.active { display: flex; }
+  .rec-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #FF6B35;
+    animation: rec-blink 1s step-end infinite;
+  }
+  @keyframes rec-blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+  .rec-note {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 4px;
+  }
+
   .ob-dots {
     display: flex;
     gap: 6px;
@@ -884,9 +939,25 @@
         // Mostra input/botão após terminar de digitar
         if (step.inputType) {
           if (step.inputType === 'textarea') {
-            inp.innerHTML = `<textarea class="ob-input" id="obInput" rows="3"
-              placeholder="${step.placeholder}"
-              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();obNext()}"></textarea>`;
+            inp.innerHTML = `
+              <textarea class="ob-input" id="obInput" rows="3"
+                placeholder="${step.placeholder}"
+                onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();obNext()}"></textarea>
+              <div class="record-row">
+                <button class="btn-record" id="btnRecord" onclick="toggleRecord()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <rect x="9" y="2" width="6" height="12" rx="3"/>
+                    <path d="M5 10a7 7 0 0 0 14 0" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    <line x1="12" y1="19" x2="12" y2="22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                  Gravar resposta
+                </button>
+                <div class="rec-indicator" id="recIndicator">
+                  <div class="rec-dot"></div>
+                  <span id="recTimer">0:00</span>
+                </div>
+              </div>
+              <div class="rec-note" id="recNote"></div>`;
           } else {
             inp.innerHTML = `<input class="ob-input" type="text" id="obInput"
               placeholder="${step.placeholder}" maxlength="80"
@@ -1031,6 +1102,99 @@
       setDot(0);
     });
   });
+
+  // ── Gravação de áudio (step 1 onboarding) ────────────────────
+  let mediaRecorder = null;
+  let recognition   = null;
+  let recTimerID    = null;
+  let recSeconds    = 0;
+
+  function toggleRecord() {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      stopRecord();
+    } else {
+      startRecord();
+    }
+  }
+
+  async function startRecord() {
+    const btn  = document.getElementById('btnRecord');
+    const ind  = document.getElementById('recIndicator');
+    const note = document.getElementById('recNote');
+
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      note.textContent = 'Permissão de microfone negada. Digite sua resposta acima.';
+      return;
+    }
+
+    // MediaRecorder (guarda o áudio bruto)
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.start();
+    mediaRecorder.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+    };
+
+    // Web Speech API — transcrição em tempo real
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SR) {
+      recognition = new SR();
+      recognition.lang = 'pt-BR';
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      let finalTranscript = '';
+      recognition.onresult = (e) => {
+        let interim = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          const t = e.results[i][0].transcript;
+          if (e.results[i].isFinal) finalTranscript += t + ' ';
+          else interim = t;
+        }
+        const ta = document.getElementById('obInput');
+        if (ta) ta.value = finalTranscript + interim;
+      };
+      recognition.start();
+      note.textContent = 'Transcrevendo em tempo real...';
+    } else {
+      note.textContent = 'Gravando... (transcrição não suportada neste navegador — clique em Parar e escreva sua resposta)';
+    }
+
+    // UI
+    btn.textContent = 'Parar gravação';
+    btn.classList.add('recording');
+    ind.classList.add('active');
+
+    // Timer
+    recSeconds = 0;
+    recTimerID = setInterval(() => {
+      recSeconds++;
+      const m = String(Math.floor(recSeconds / 60)).padStart(1,'0');
+      const s = String(recSeconds % 60).padStart(2,'0');
+      const timerEl = document.getElementById('recTimer');
+      if (timerEl) timerEl.textContent = `${m}:${s}`;
+    }, 1000);
+  }
+
+  function stopRecord() {
+    if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+    if (recognition) { try { recognition.stop(); } catch(_) {} recognition = null; }
+    clearInterval(recTimerID);
+
+    const btn  = document.getElementById('btnRecord');
+    const ind  = document.getElementById('recIndicator');
+    const note = document.getElementById('recNote');
+
+    if (btn) {
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><line x1="12" y1="19" x2="12" y2="22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> Gravar novamente`;
+      btn.classList.remove('recording');
+    }
+    if (ind) ind.classList.remove('active');
+    if (note) note.textContent = 'Gravação concluída. Edite o texto acima se quiser.';
+
+    mediaRecorder = null;
+  }
 
   function autoResize(el) {
     el.style.height = 'auto';

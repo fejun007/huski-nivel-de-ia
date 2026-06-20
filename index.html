@@ -1619,13 +1619,37 @@ Nível 5: Propõe arquitetura com validação automática cruzando com fonte de 
     msgs.scrollTop = msgs.scrollHeight;
   }
 
-  async function submitTest() {
-    document.querySelector('.input-area').innerHTML = `
-      <div style="padding:20px 24px;text-align:center;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);">
-        analisando suas respostas...
+  const EVAL_WAIT_MESSAGES = [
+    'avaliando suas respostas...',
+    'agentes de IA lendo seus cases...',
+    'comparando com os critérios de cada nível...',
+    'consolidando seu perfil de maturidade...',
+    'calculando sua nota final...',
+  ];
+
+  let evalWaitTimer = null;
+
+  function startEvalWaitMessages() {
+    const el = document.querySelector('.input-area');
+    let i = 0;
+    el.innerHTML = `
+      <div id="evalWaitMsg" style="padding:20px 24px;text-align:center;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);">
+        ${EVAL_WAIT_MESSAGES[0]}
       </div>`;
+    evalWaitTimer = setInterval(() => {
+      i = (i + 1) % EVAL_WAIT_MESSAGES.length;
+      const msgEl = document.getElementById('evalWaitMsg');
+      if (msgEl) msgEl.textContent = EVAL_WAIT_MESSAGES[i];
+    }, 1800);
+  }
+
+  function stopEvalWaitMessages() {
+    if (evalWaitTimer) { clearInterval(evalWaitTimer); evalWaitTimer = null; }
+  }
+
+  async function submitTest() {
+    startEvalWaitMessages();
     appendAriaMsg('Perfeito! Recebi todas as suas respostas. Estou analisando seu perfil de maturidade em IA agora — isso leva alguns segundos.');
-    fetchAudio('Perfeito! Recebi todas as suas respostas. Estou analisando seu perfil de maturidade em IA agora.').then(a => { if(a) a.play().catch(()=>{}); });
 
     try {
       const res = await fetch(`${API_BASE}/nivel-ia/evaluate`, {
@@ -1635,8 +1659,10 @@ Nível 5: Propõe arquitetura com validação automática cruzando com fonte de 
       });
       if (!res.ok) throw new Error(await res.text());
       const result = await res.json();
+      stopEvalWaitMessages();
       setTimeout(() => showResult(result), 800);
     } catch (e) {
+      stopEvalWaitMessages();
       appendAriaMsg('Ocorreu um erro ao processar sua avaliação. Por favor, recarregue a página.');
       console.error(e);
     }
@@ -1794,10 +1820,6 @@ Nível 5: Propõe arquitetura com validação automática cruzando com fonte de 
     setTimeout(() => {
       card.querySelectorAll('.dim-bar-fill').forEach(b => { b.style.width = b.dataset.target + '%'; });
     }, 200);
-
-    // ARIA narra o resultado
-    const narration = `Pronto, ${userName}! Você está no Nível ${nivel} — ${titulo}. ${resumo}`;
-    fetchAudio(narration).then(a => { if(a) a.play().catch(()=>{}); });
   }
 
   function restart() {

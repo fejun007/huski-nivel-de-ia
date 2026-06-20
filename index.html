@@ -1017,12 +1017,13 @@
 
   // ── Loading screen ────────────────────────────────────────────
   const LOADING_STEPS = [
-    { pct: 18,  msg: 'inicializando ambiente seguro...'            },
-    { pct: 38,  msg: 'carregando sua simulação...'                 },
-    { pct: 58,  msg: 'endereçando agentes exclusivos para observação...' },
-    { pct: 76,  msg: 'calibrando métricas de avaliação...'         },
-    { pct: 92,  msg: 'preparando sua experiência personalizada...' },
-    { pct: 100, msg: 'tudo pronto!'                                },
+    { pct: 12,  msg: 'inicializando ambiente seguro...',                  ms: 600  },
+    { pct: 26,  msg: 'carregando sua simulação...',                       ms: 700  },
+    { pct: 44,  msg: 'endereçando agentes exclusivos para observação...', ms: 800  },
+    { pct: 60,  msg: 'calibrando métricas de avaliação...',               ms: 700  },
+    { pct: 76,  msg: 'preparando sua experiência personalizada...',       ms: 800  },
+    { pct: 88,  msg: 'carregando voz da ARIA...',                         ms: 600  },
+    { pct: 96,  msg: 'sincronizando áudio e texto...',                    ms: 500  },
   ];
 
   function runLoadingScreen(onDone) {
@@ -1030,21 +1031,47 @@
     const msg = document.getElementById('loadingMsg');
     const btn = document.getElementById('btnStartLoading');
     let i = 0;
+    let animDone = false;
+
+    function showButton() {
+      bar.style.width = '100%';
+      msg.textContent = 'tudo pronto!';
+      btn.classList.add('show');
+      btn.onclick = () => {
+        btn.disabled = true;
+        onDone();
+      };
+    }
+
+    function checkReady() {
+      // Só mostra o botão quando animação E áudio estiverem prontos
+      if (animDone && preloadedAudio !== null) {
+        showButton();
+      }
+    }
 
     function nextStep() {
       if (i >= LOADING_STEPS.length) {
-        // Mostra botão — play() só funciona a partir de interação do usuário
-        btn.classList.add('show');
-        btn.onclick = () => {
-          btn.disabled = true;
-          onDone(); // direto no click — mantém o gesto do usuário para o play()
-        };
+        animDone = true;
+        checkReady();
+        // Se áudio ainda não chegou, espera (polling) e mostra mensagem
+        if (preloadedAudio === null) {
+          msg.textContent = 'aguardando voz da ARIA...';
+          const iv = setInterval(() => {
+            if (preloadedAudio !== null) {
+              clearInterval(iv);
+              checkReady();
+            }
+          }, 100);
+          // Timeout de segurança: 20s — mostra botão mesmo sem áudio
+          setTimeout(() => { clearInterval(iv); if (!btn.classList.contains('show')) showButton(); }, 20000);
+        }
         return;
       }
       const s = LOADING_STEPS[i++];
       bar.style.width = s.pct + '%';
       msg.textContent = s.msg;
-      setTimeout(nextStep, 520);
+      setTimeout(nextStep, s.ms);
     }
 
     nextStep();
@@ -1059,15 +1086,13 @@
     fetchAudio(STEP0_TEXT).then(audio => { preloadedAudio = audio; });
 
     runLoadingScreen(() => {
-      // ── Chamado direto no onclick ──────────────────────────────
-      // 1) Criar AudioContext aqui desbloqueia autoplay para toda a sessão
-      //    (Chrome: após essa linha, play() pode ser chamado de qualquer async)
+      // Chamado direto no onclick — áudio já está carregado (loading esperou)
+      // Criar AudioContext desbloqueia autoplay no Chrome para toda a sessão
       try {
         const unlockCtx = new (window.AudioContext || window.webkitAudioContext)();
         unlockCtx.resume().then(() => unlockCtx.close()).catch(() => {});
       } catch(_) {}
 
-      // 2) Fade-out do loading
       const screen = document.getElementById('loadingScreen');
       screen.classList.add('fade-out');
       setTimeout(() => { screen.style.display = 'none'; }, 700);
@@ -1076,8 +1101,12 @@
       const orb = document.getElementById('ariaOrb');
       const charsPerMs = STEP0_TEXT.length > 200 ? 28 : 20;
 
-      // 3) Inicia typewriter imediatamente (com orb pulsando)
       orb?.classList.add('speaking');
+
+      // Áudio e typewriter disparam juntos — sem delay
+      if (preloadedAudio) {
+        preloadedAudio.play().catch(err => console.warn('play() falhou:', err));
+      }
       typeWriter(STEP0_TEXT, el, charsPerMs, () => {
         const inp = document.getElementById('obInputGroup');
         const btn = document.getElementById('btnOb');
@@ -1092,26 +1121,6 @@
         }, 200);
       });
       setDot(0);
-
-      // 4) Toca o áudio assim que estiver pronto (AudioContext já desbloqueado)
-      const tryPlay = async () => {
-        if (!preloadedAudio) {
-          // Aguarda chegada do áudio (Railway pode ter cold start)
-          await new Promise(resolve => {
-            const iv = setInterval(() => {
-              if (preloadedAudio !== null) { clearInterval(iv); resolve(); }
-            }, 150);
-            setTimeout(() => { clearInterval(iv); resolve(); }, 12000);
-          });
-        }
-        if (preloadedAudio) {
-          preloadedAudio.play().catch(err => console.warn('play() falhou:', err));
-        } else {
-          console.warn('Áudio não carregou (backend offline?)');
-          orb?.classList.remove('speaking');
-        }
-      };
-      tryPlay();
     });
   });
 

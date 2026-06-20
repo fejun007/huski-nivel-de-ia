@@ -587,6 +587,28 @@
     text-align: center;
     min-height: 16px;
   }
+  .btn-start-loading {
+    margin-top: 8px;
+    padding: 14px 36px;
+    border-radius: 12px;
+    border: none;
+    background: var(--pulse);
+    color: var(--ink);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    pointer-events: none;
+  }
+  .btn-start-loading.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: all;
+  }
+  .btn-start-loading:hover { opacity: 0.88; }
 
   .ob-input-group {
     width: 100%;
@@ -663,6 +685,7 @@
   <div style="display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;max-width:280px">
     <div class="loading-bar-wrap"><div class="loading-bar" id="loadingBar"></div></div>
     <div class="loading-msg" id="loadingMsg">inicializando ambiente seguro...</div>
+    <button class="btn-start-loading" id="btnStartLoading">Iniciar avaliação →</button>
   </div>
 </div>
 
@@ -934,19 +957,25 @@
   function runLoadingScreen(onDone) {
     const bar = document.getElementById('loadingBar');
     const msg = document.getElementById('loadingMsg');
+    const btn = document.getElementById('btnStartLoading');
     let i = 0;
 
     function nextStep() {
       if (i >= LOADING_STEPS.length) {
-        const screen = document.getElementById('loadingScreen');
-        screen.classList.add('fade-out');
-        setTimeout(onDone, 650);
+        // Mostra botão — play() só funciona a partir de interação do usuário
+        btn.classList.add('show');
+        btn.onclick = () => {
+          btn.disabled = true;
+          const screen = document.getElementById('loadingScreen');
+          screen.classList.add('fade-out');
+          setTimeout(onDone, 650);
+        };
         return;
       }
       const s = LOADING_STEPS[i++];
       bar.style.width = s.pct + '%';
       msg.textContent = s.msg;
-      setTimeout(nextStep, i === LOADING_STEPS.length ? 600 : 520);
+      setTimeout(nextStep, 520);
     }
 
     nextStep();

@@ -866,6 +866,17 @@
   let obStep = 0;
   let ttsReady = false;
 
+  // ── Integração externa: sessão pode vir de outra aplicação via ?session_id=&nome= ──
+  const urlParams = new URLSearchParams(window.location.search);
+  let currentSessionId = urlParams.get('session_id') || null;
+  const externalNome = urlParams.get('nome') || null;
+  if (externalNome) {
+    document.addEventListener('DOMContentLoaded', () => {
+      const obIn = document.getElementById('obInput');
+      if (obIn) obIn.value = externalNome;
+    });
+  }
+
   // ── TTS via Gemini 2.5 Flash (backend) ───────────────────────
   let currentAudio = null;
 
@@ -1060,14 +1071,18 @@
       const iaExperience = val;
       obStep = 2;
 
-      // Salva sessão no backend
-      try {
-        await fetch(`${API_BASE}/session/create`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nome: userName, resposta_inicial: iaExperience }),
-        });
-      } catch (_) {}
+      // Salva sessão no backend (ou reutiliza session_id vindo de uma aplicação parceira via URL)
+      if (!currentSessionId) {
+        try {
+          const r = await fetch(`${API_BASE}/session/create`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nome: userName, resposta_inicial: iaExperience }),
+          });
+          const data = await r.json();
+          currentSessionId = data.session_id || null;
+        } catch (_) {}
+      }
 
       const txt = `Perfeito, ${userName}! Já tenho um ótimo contexto sobre você. A avaliação combina questões de múltipla escolha, perguntas abertas e alguns desafios práticos — deve levar entre 8 e 12 minutos. Tudo pronto para começar?`;
       showObStep(2, txt);
@@ -1978,7 +1993,7 @@ Nível 5: Tudo do nível 4, mais propõe mitigação completa: sandbox sem acess
       const res = await fetch(`${API_BASE}/nivel-ia/evaluate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome: userName, answers: testAnswers }),
+        body: JSON.stringify({ nome: userName, answers: testAnswers, session_id: currentSessionId }),
       });
       if (!res.ok) throw new Error(await res.text());
       const result = await res.json();

@@ -1227,7 +1227,7 @@
       options:['Não uso automações','Uso ferramentas prontas (Zapier básico, integrações nativas)','Crio automações no-code / low-code (n8n, Make, Zapier avançado)','Desenvolvo agentes autônomos com LangChain, CrewAI ou similares','Arquiteto sistemas multi-agente em produção'] },
     { id:'q4', type:'mc', text:'Como você lida com alucinações e erros das IAs?',
       options:['Aceito as respostas sem questionar muito','Verifico informações críticas em outras fontes','Implemento loops de validação e tratamento de erros nos fluxos','Desenvolvo benchmarks para avaliar qualidade em escala','Defino métricas e governança de qualidade para toda a organização'] },
-    { id:'q5', type:'mc', text:'Qual das ações abaixo você já realizou?',
+    { id:'q5', type:'mc', multi:true, text:'Qual das ações abaixo você já realizou? (selecione todas que se aplicam)',
       options:['Usei ChatGPT para escrever textos ou tirar dúvidas','Integrei IA a planilhas, e-mails ou ferramentas do dia a dia','Conectei APIs de LLMs a outras ferramentas via código ou plataformas','Implementei RAG (busca em documentos próprios) ou function calling','Fiz fine-tuning de um modelo de linguagem aberto'] },
     { id:'q6', type:'mc', text:'Como a IA impacta seu trabalho hoje?',
       options:['Pouco ou nenhum impacto ainda','Me ajuda a fazer tarefas existentes mais rápido','Automatizou processos inteiros, liberando tempo para estratégia','Criei novos produtos ou serviços que não existiriam sem IA','Influencio a estratégia de IA da minha organização ou mercado'] },
@@ -1291,14 +1291,29 @@
 
     // Renderiza input adequado
     renderQuestionInput(q);
-
-    // TTS da pergunta
-    fetchAudio(q.text).then(audio => { if (audio) audio.play().catch(()=>{}); });
   }
 
   function renderQuestionInput(q) {
     const area = document.querySelector('.input-area');
-    if (q.type === 'mc') {
+    if (q.type === 'mc' && q.multi) {
+      area.innerHTML = `
+        <div style="padding:12px 24px 20px;display:flex;flex-direction:column;gap:8px;">
+          ${q.options.map((opt, i) => `
+            <button id="mopt_${i}" onclick="toggleMulti(${i},'${q.id}')"
+              style="text-align:left;padding:12px 16px;border-radius:10px;border:1px solid var(--border);
+                     background:var(--panel);color:var(--fog);font-family:'Plus Jakarta Sans',sans-serif;
+                     font-size:14px;cursor:pointer;transition:border-color .2s,color .2s,background .2s;display:flex;align-items:center;gap:10px;">
+              <span id="mcheck_${i}" style="width:16px;height:16px;border-radius:4px;border:1px solid var(--border);
+                     display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;"></span>
+              <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--pulse);margin-right:4px;">${String.fromCharCode(65+i)})</span>${escapeHtml(opt)}
+            </button>`).join('')}
+          <button onclick="confirmMulti('${q.id}')"
+            style="margin-top:4px;padding:13px;border-radius:10px;border:none;background:var(--pulse);color:var(--ink);
+                   font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">
+            Confirmar seleção →
+          </button>
+        </div>`;
+    } else if (q.type === 'mc') {
       area.innerHTML = `
         <div style="padding:12px 24px 20px;display:flex;flex-direction:column;gap:8px;" id="mcOptions">
           ${q.options.map((opt, i) => `
@@ -1358,6 +1373,48 @@
         </div>`;
     }
     document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+  }
+
+  const multiSelected = new Set();
+
+  function toggleMulti(idx, qId) {
+    const btn   = document.getElementById(`mopt_${idx}`);
+    const check = document.getElementById(`mcheck_${idx}`);
+    if (multiSelected.has(idx)) {
+      multiSelected.delete(idx);
+      btn.style.borderColor   = 'var(--border)';
+      btn.style.background    = 'var(--panel)';
+      btn.style.color         = 'var(--fog)';
+      check.style.background  = 'transparent';
+      check.style.borderColor = 'var(--border)';
+      check.textContent       = '';
+    } else {
+      multiSelected.add(idx);
+      btn.style.borderColor   = 'var(--pulse)';
+      btn.style.background    = 'var(--pulse-dim)';
+      btn.style.color         = 'var(--white)';
+      check.style.background  = 'var(--pulse)';
+      check.style.borderColor = 'var(--pulse)';
+      check.textContent       = '✓';
+      check.style.color       = 'var(--ink)';
+    }
+  }
+
+  function confirmMulti(qId) {
+    if (multiSelected.size === 0) return;
+    const q = TEST_QUESTIONS[currentQ];
+    const labels = [...multiSelected].sort().map(i => String.fromCharCode(65 + i));
+    const texts  = [...multiSelected].sort().map(i => q.options[i]);
+    testAnswers.push({
+      question_id: qId, question_type: 'mc',
+      question_text: q.text,
+      answer_text: texts.join('; '),
+      option_label: labels.join(', '),
+    });
+    appendUserMsg(labels.map((l, i) => `${l}) ${texts[i]}`).join('\n'));
+    multiSelected.clear();
+    currentQ++;
+    setTimeout(() => showTestQuestion(currentQ), 600);
   }
 
   function selectMC(optIdx, qId, optText) {

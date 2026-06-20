@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>huski — Nível de IA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  /* ── Reset & Tokens ─────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink:    #0F0F0F;
+    --slate:  #1A1A1A;
+    --panel:  #222222;
+    --border: #2E2E2E;
+    --white:  #FFFFFF;
+    --fog:    #A8A8A8;
+    --muted:  #6B6B6B;
+    --pulse:  #00D4FF;
+    --pulse-dim: #00D4FF18;
+    --pulse-border: #00D4FF40;
+    --score:  #00FF90;
+    --alert:  #FF6B35;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--ink);
+    color: var(--white);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ── Layout ─────────────────────────────────────────────────── */
+  .app {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  /* ── Header ─────────────────────────────────────────────────── */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .logo {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    user-select: none;
+  }
+  .logo .bracket { color: var(--pulse); opacity: 0.7; }
+
+  .header-meta {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .session-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--pulse);
+    letter-spacing: 0.05em;
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--score);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* ── Messages ───────────────────────────────────────────────── */
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 24px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .messages::-webkit-scrollbar { width: 4px; }
+  .messages::-webkit-scrollbar-track { background: transparent; }
+  .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .msg {
+    display: flex;
+    gap: 12px;
+    max-width: 88%;
+    animation: msg-in 0.25s ease-out both;
+  }
+  @keyframes msg-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg.aria { align-self: flex-start; }
+  .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--pulse);
+    flex-shrink: 0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  .msg.user .avatar {
+    background: var(--pulse-dim);
+    border-color: var(--pulse-border);
+    color: var(--pulse);
+  }
+
+  .bubble {
+    padding: 12px 16px;
+    border-radius: 12px;
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  .msg.aria .bubble {
+    background: var(--slate);
+    border: 1px solid var(--border);
+    border-top-left-radius: 4px;
+    color: var(--white);
+    border-left: 3px solid var(--pulse);
+    padding-left: 14px;
+  }
+  .msg.user .bubble {
+    background: var(--pulse-dim);
+    border: 1px solid var(--pulse-border);
+    border-top-right-radius: 4px;
+    color: var(--white);
+  }
+
+  /* Typing indicator */
+  .typing-indicator {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    padding: 14px 16px;
+  }
+  .typing-indicator span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--pulse);
+    opacity: 0.4;
+    animation: typing 1.2s ease-in-out infinite;
+  }
+  .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typing {
+    0%, 80%, 100% { opacity: 0.4; transform: scale(1); }
+    40%           { opacity: 1;   transform: scale(1.3); }
+  }
+
+  /* ── Input ──────────────────────────────────────────────────── */
+  .input-area {
+    padding: 16px 24px 24px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .input-wrap {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    background: var(--slate);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    transition: border-color 0.2s;
+  }
+  .input-wrap:focus-within { border-color: var(--pulse-border); }
+
+  textarea {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--white);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    resize: none;
+    min-height: 24px;
+    max-height: 120px;
+    overflow-y: auto;
+    caret-color: var(--pulse);
+  }
+  textarea::placeholder { color: var(--muted); }
+
+  .send-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: var(--pulse);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: opacity 0.2s, transform 0.1s;
+    color: var(--ink);
+  }
+  .send-btn:hover { opacity: 0.85; }
+  .send-btn:active { transform: scale(0.94); }
+  .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .send-btn svg { width: 16px; height: 16px; }
+
+  .input-hint {
+    margin-top: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  /* ── Result Card ─────────────────────────────────────────────── */
+  .result-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,15,15,0.92);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    z-index: 100;
+    animation: fade-in 0.4s ease both;
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  .result-card {
+    background: var(--slate);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--pulse);
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 560px;
+    width: 100%;
+    max-height: 90dvh;
+    overflow-y: auto;
+    animation: card-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  @keyframes card-in {
+    from { opacity: 0; transform: translateY(24px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .result-level-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--pulse-dim);
+    border: 1px solid var(--pulse-border);
+    border-radius: 99px;
+    padding: 4px 14px 4px 10px;
+    margin-bottom: 20px;
+  }
+  .result-level-badge .level-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--pulse);
+    font-weight: 500;
+  }
+  .result-level-badge .level-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--pulse);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .result-score-big {
+    font-family: 'DM Mono', monospace;
+    font-size: 72px;
+    font-weight: 500;
+    color: var(--pulse);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .result-score-label {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 24px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .result-desc {
+    color: var(--fog);
+    font-size: 15px;
+    line-height: 1.65;
+    margin-bottom: 28px;
+  }
+
+  .result-section-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  /* Dimensões */
+  .dimensions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .dim-row {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .dim-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .dim-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--white);
+    text-transform: capitalize;
+  }
+  .dim-score {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--pulse);
+  }
+  .dim-bar-track {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .dim-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--score);
+    width: 0%;
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .dim-bar-fill.low  { background: var(--alert); }
+  .dim-bar-fill.mid  { background: var(--pulse); }
+  .dim-bar-fill.high { background: var(--score); }
+
+  /* Listas */
+  .result-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+  .result-list li {
+    display: flex;
+    gap: 10px;
+    color: var(--fog);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .result-list li::before {
+    content: '·';
+    color: var(--pulse);
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .result-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .btn-restart {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--fog);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-restart:hover { border-color: var(--pulse-border); color: var(--white); }
+
+  .btn-share {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    background: var(--pulse);
+    color: var(--ink);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn-share:hover { opacity: 0.85; }
+
+  /* ── Grid sutil ─────────────────────────────────────────────── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 32px 32px;
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .app { position: relative; z-index: 1; }
+
+  /* ── Config overlay ──────────────────────────────────────────── */
+  .config-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,15,15,0.96);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    z-index: 200;
+  }
+  .config-card {
+    background: var(--slate);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--pulse);
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 440px;
+    width: 100%;
+  }
+  .config-card h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .config-card p {
+    color: var(--fog);
+    font-size: 14px;
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+  .config-card label {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .config-card input {
+    width: 100%;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--white);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    outline: none;
+    margin-bottom: 20px;
+    transition: border-color 0.2s;
+  }
+  .config-card input:focus { border-color: var(--pulse-border); }
+  .config-card input::placeholder { color: var(--muted); }
+  .btn-start {
+    width: 100%;
+    padding: 14px;
+    border-radius: 10px;
+    border: none;
+    background: var(--pulse);
+    color: var(--ink);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn-start:hover { opacity: 0.85; }
+  .config-note {
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<!-- Config Overlay -->
+<div class="config-overlay" id="configOverlay">
+  <div class="config-card">
+    <div style="margin-bottom:20px">
+      <span style="font-size:22px;font-weight:800;letter-spacing:-0.02em">
+        <span style="color:#00D4FF;opacity:0.7">[</span>H<span style="color:#00D4FF;opacity:0.7">]</span>
+        <span style="font-size:18px;font-weight:700"> huski</span>
+      </span>
+    </div>
+    <h2>Avalie seu nível de IA</h2>
+    <p>Uma conversa rápida com ARIA, nossa assessora. Sem testes formais — só perguntas reais. No fim, você recebe uma análise do seu momento atual com IA.</p>
+    <label>URL do backend</label>
+    <input type="text" id="apiUrl" placeholder="https://seu-backend.railway.app" value="" />
+    <button class="btn-start" onclick="startSession()">Iniciar avaliação →</button>
+    <div class="config-note">~5 minutos · sem resposta certa ou errada</div>
+  </div>
+</div>
+
+<!-- App -->
+<div class="app">
+  <header>
+    <div class="logo">
+      <span class="bracket">[</span>H<span class="bracket">]</span>
+      <span style="font-size:16px;font-weight:700;letter-spacing:-0.01em;margin-left:6px">huski</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px;margin-left:12px">
+      <span style="font-size:13px;font-weight:600;color:var(--white)">Nível de IA</span>
+      <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">conversa com ARIA</span>
+    </div>
+    <div class="header-meta">
+      <div class="status-dot" id="statusDot"></div>
+      <span class="session-tag" id="sessionTag">SESSÃO ATIVA</span>
+    </div>
+  </header>
+
+  <div class="messages" id="messages"></div>
+
+  <div class="input-area">
+    <div class="input-wrap">
+      <textarea
+        id="msgInput"
+        placeholder="Digite sua resposta..."
+        rows="1"
+        onkeydown="handleKey(event)"
+        oninput="autoResize(this)"
+        disabled
+      ></textarea>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled>
+        <svg viewBox="0 0 16 16" fill="none">
+          <path d="M2 8h12M10 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+    <div class="input-hint">Enter para enviar · Shift+Enter para nova linha</div>
+  </div>
+</div>
+
+<!-- Result Overlay (hidden) -->
+<div class="result-overlay" id="resultOverlay" style="display:none">
+  <div class="result-card" id="resultCard"></div>
+</div>
+
+<script>
+  let API_BASE = '';
+  let history = [];
+  let turnCount = 0;
+
+  // ── Auto-detect saved URL ─────────────────────────────────────
+  const saved = localStorage.getItem('huski_nivel_ia_url');
+  if (saved) document.getElementById('apiUrl').value = saved;
+
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  async function startSession() {
+    const url = document.getElementById('apiUrl').value.trim().replace(/\/$/, '');
+    if (!url) { alert('Informe a URL do backend.'); return; }
+    API_BASE = url;
+    localStorage.setItem('huski_nivel_ia_url', url);
+
+    document.getElementById('configOverlay').style.display = 'none';
+
+    showTyping();
+    try {
+      const res = await fetch(`${API_BASE}/nivel-ia/start`, { method: 'POST' });
+      const data = await res.json();
+      removeTyping();
+      appendMessage('aria', data.reply);
+      history.push({ role: 'assistant', content: data.reply });
+      enableInput();
+    } catch (e) {
+      removeTyping();
+      appendMessage('aria', 'Não consegui conectar ao backend. Verifique a URL e tente novamente.');
+    }
+  }
+
+  async function sendMessage() {
+    const input = document.getElementById('msgInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    input.value = '';
+    input.style.height = 'auto';
+    disableInput();
+
+    appendMessage('user', text);
+    history.push({ role: 'user', content: text });
+    turnCount++;
+
+    showTyping();
+    try {
+      const res = await fetch(`${API_BASE}/nivel-ia/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ history: history.slice(0, -1), message: text }),
+      });
+      const data = await res.json();
+      removeTyping();
+
+      if (data.reply) {
+        appendMessage('aria', data.reply);
+        history.push({ role: 'assistant', content: data.reply });
+      }
+
+      if (data.finished && data.result) {
+        setTimeout(() => showResult(data.result), 800);
+      } else {
+        enableInput();
+      }
+    } catch (e) {
+      removeTyping();
+      appendMessage('aria', 'Ocorreu um erro. Tente novamente.');
+      enableInput();
+    }
+  }
+
+  function appendMessage(role, text) {
+    const messages = document.getElementById('messages');
+    const msg = document.createElement('div');
+    msg.className = `msg ${role}`;
+    const avatarLabel = role === 'aria' ? '[A]' : 'EU';
+    msg.innerHTML = `
+      <div class="avatar">${avatarLabel}</div>
+      <div class="bubble">${escapeHtml(text)}</div>
+    `;
+    messages.appendChild(msg);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function showTyping() {
+    const messages = document.getElementById('messages');
+    const typing = document.createElement('div');
+    typing.className = 'msg aria';
+    typing.id = 'typingMsg';
+    typing.innerHTML = `
+      <div class="avatar">[A]</div>
+      <div class="bubble typing-indicator">
+        <span></span><span></span><span></span>
+      </div>
+    `;
+    messages.appendChild(typing);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function removeTyping() {
+    const el = document.getElementById('typingMsg');
+    if (el) el.remove();
+  }
+
+  function enableInput() {
+    document.getElementById('msgInput').disabled = false;
+    document.getElementById('sendBtn').disabled = false;
+    document.getElementById('msgInput').focus();
+  }
+
+  function disableInput() {
+    document.getElementById('msgInput').disabled = true;
+    document.getElementById('sendBtn').disabled = true;
+  }
+
+  function showResult(result) {
+    const overlay = document.getElementById('resultOverlay');
+    const card = document.getElementById('resultCard');
+
+    const dimNames = {
+      consciencia: 'Consciência',
+      uso: 'Uso',
+      profundidade: 'Profundidade',
+      integracao: 'Integração',
+      mentalidade: 'Mentalidade',
+    };
+
+    const dimsHtml = Object.entries(result.dimensoes || {}).map(([key, val]) => {
+      const cls = val < 40 ? 'low' : val < 70 ? 'mid' : 'high';
+      return `
+        <div class="dim-row">
+          <div class="dim-header">
+            <span class="dim-name">${dimNames[key] || key}</span>
+            <span class="dim-score">${val}</span>
+          </div>
+          <div class="dim-bar-track">
+            <div class="dim-bar-fill ${cls}" data-target="${val}"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    const destaquesHtml = (result.destaques || []).map(d => `<li>${escapeHtml(d)}</li>`).join('');
+    const proximosHtml  = (result.proximos_passos || []).map(d => `<li>${escapeHtml(d)}</li>`).join('');
+
+    card.innerHTML = `
+      <div class="result-level-badge">
+        <span class="level-num">NÍVEL ${result.nivel}</span>
+        <span class="level-name">${result.nivel_nome}</span>
+      </div>
+      <div class="result-score-big">${result.score_total}</div>
+      <div class="result-score-label">/ 100 · score geral</div>
+      <div class="result-desc">${escapeHtml(result.descricao)}</div>
+
+      <div class="result-section-title">Dimensões</div>
+      <div class="dimensions">${dimsHtml}</div>
+
+      ${destaquesHtml ? `
+        <div class="result-section-title">Pontos fortes</div>
+        <ul class="result-list">${destaquesHtml}</ul>
+      ` : ''}
+
+      ${proximosHtml ? `
+        <div class="result-section-title">Próximos passos</div>
+        <ul class="result-list">${proximosHtml}</ul>
+      ` : ''}
+
+      <div class="result-actions">
+        <button class="btn-restart" onclick="restart()">Refazer avaliação</button>
+        <button class="btn-share" onclick="copyResult(${result.score_total}, '${result.nivel_nome}')">Copiar resultado</button>
+      </div>
+    `;
+
+    overlay.style.display = 'flex';
+
+    // Anima barras com delay
+    setTimeout(() => {
+      card.querySelectorAll('.dim-bar-fill').forEach(bar => {
+        bar.style.width = bar.dataset.target + '%';
+      });
+    }, 200);
+  }
+
+  function restart() {
+    document.getElementById('resultOverlay').style.display = 'none';
+    document.getElementById('messages').innerHTML = '';
+    history = [];
+    turnCount = 0;
+    disableInput();
+    startSession();
+  }
+
+  function copyResult(score, nivel) {
+    const text = `Fiz a avaliação de nível de IA da Huski e tirei ${score}/100 — Nível: ${nivel}. huski.ai`;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.querySelector('.btn-share');
+      btn.textContent = 'Copiado ✓';
+      setTimeout(() => btn.textContent = 'Copiar resultado', 2000);
+    });
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/\n/g, '<br>');
+  }
+</script>
+</body>
+</html>

@@ -1342,6 +1342,46 @@ Nível 2: Propõe usar IA para relatórios de vendas ou segmentação básica de
 Nível 3: Define quick wins para 90 dias (ex: recomendação de produto, previsão de demanda), usa dados históricos de forma estruturada, considera integração com estoque.
 Nível 4: Propõe arquitetura de dados completa, modelo preditivo de churn, personalização em escala com segmentação dinâmica e pipeline de ML para previsão de demanda.
 Nível 5: Estratégia de IA para o negócio com roadmap de 12 meses, definição de KPIs de negócio, governança de dados, e como IA transforma o modelo operacional da rede.` },
+    { id:'c5', type:'case', timer:130,
+      text:'Nossa empresa abriu uma vaga afirmativa de liderança em tecnologia e recebeu mais de 1.500 currículos em 48 horas. O time de Atração de Talentos está sobrecarregado. Como você estruturaria o uso de IA Generativa para ajudar na triagem inicial desses candidatos, garantindo que o processo seja eficiente, mas eliminando o risco de vieses inconscientes (preconceitos de gênero, idade ou faculdade) na tomada de decisão da IA?',
+      criteria:`Avalie a resposta considerando os seguintes indicadores por nível:
+Nível 1: Sugere apenas jogar todos os currículos no ChatGPT e pedir para escolher os melhores, sem critério.
+Nível 2: Menciona uso de IA para triagem mas ignora completamente o risco de viés (não sabe que LLMs herdam preconceitos dos dados de treino); não propõe anonimização.
+Nível 3: Propõe anonimização parcial dos dados (remover algumas informações sensíveis) e algum critério objetivo de corte, mas sem estrutura completa.
+Nível 4: Propõe fluxo com dados anonimizados (nome, gênero, idade, faculdade removidos), foco em competências e resultados (Skills-First Hiring), com régua de notas baseada em critérios estritos.
+Nível 5: Tudo do nível 4, mais uso de Few-Shot Prompting com exemplos de "currículos ideais para a cultura da empresa", IA apenas sugere ranking justificado por texto, e decisão final de entrevista permanece 100% humana (human-in-the-loop).` },
+    { id:'c6', type:'case', timer:130,
+      text:'A diretoria financeira precisa analisar um relatório de fluxo de caixa consolidado que contém milhares de linhas de transações de 5 filiais diferentes, misturando dados estruturados (valores) e descrições textuais confusas de despesas. Eles querem identificar anomalias, gastos duplicados e tendências de desperdício rapidamente. Como você usaria a IA para realizar essa análise de forma segura e recorrente?',
+      criteria:`Avalie a resposta considerando os seguintes indicadores por nível:
+Nível 1: Sugere fazer upload do arquivo financeiro na interface pública do ChatGPT ou Claude para gerar gráficos, sem nenhuma preocupação com privacidade ou compliance.
+Nível 2: Sugere uso de IA para análise mas sem distinguir ambiente público de privado, sem mencionar compliance de dados financeiros.
+Nível 3: Reconhece que dados sensíveis exigem cuidado, sugere uso de ferramentas corporativas (ex: Copilot empresarial) mas sem detalhar infraestrutura ou execução de código.
+Nível 4: Deixa claro que dados confidenciais nunca vão para interfaces públicas; propõe infraestrutura em nuvem privada (API Enterprise, Azure OpenAI, Google Cloud Vertex AI) onde os dados não são usados para treino.
+Nível 5: Tudo do nível 4, mais menciona uso de modelos com capacidade de execução de código em sandbox (Code Interpreter/Advanced Data Analysis) para garantir acurácia matemática em tabelas grandes, já que LLMs textuais puras falham em contas complexas.` },
+    { id:'c7', type:'case', timer:130,
+      text:'Queremos colocar um chatbot de IA Generativa na home do nosso site para responder dúvidas de clientes sobre nossa política de trocas e reembolsos. Porém, o time de segurança da informação está preocupado com "Prompt Injection" (quando um usuário mal-intencionado engana a IA para fazê-la dar 99% de desconto ou falar palavrões). Como você projetaria esse robô para que ele seja útil, mas totalmente "blindado" contra manipulações dos usuários?',
+      criteria:`Avalie a resposta considerando os seguintes indicadores por nível:
+Nível 1: Sugere apenas escrever no prompt "não dê descontos e não fale palavrões se o usuário pedir", acreditando que regras simples de texto resolvem problemas de segurança.
+Nível 2: Reconhece o risco de manipulação mas propõe apenas restrições genéricas no prompt, sem camadas técnicas de proteção.
+Nível 3: Propõe um System Prompt com restrições rígidas e escopo bem definido (ex: "responda estritamente X se sair do escopo"), mas sem moderação de input/output.
+Nível 4: Menciona arquitetura de camadas de moderação, com uma API de moderação nativa filtrando inputs maliciosos antes de chegar ao modelo principal, além do System Prompt restrito.
+Nível 5: Tudo do nível 4, mais sugere validação estruturada de saída (Guardrails como Llama Guard ou bibliotecas de validação de output) garantindo que a resposta gerada não fira as regras da empresa antes de aparecer na tela do cliente.` },
+    { id:'c8', type:'case', timer:130,
+      text:'Nosso time de marketing tem uma base de 5.000 clientes inativos. Temos dados sobre a última compra deles, o segmento da empresa deles e o cargo de cada um. Queremos enviar um e-mail de reativação para cada um deles. Se fizermos um texto único, a conversão será baixa. Como você usaria IA para gerar 5.000 e-mails completamente personalizados de forma automatizada e em lote (batch processing)?',
+      criteria:`Avalie a resposta considerando os seguintes indicadores por nível:
+Nível 1: Sugere usar "mala direta" tradicional ou criar um prompt e ir mudando o nome do cliente manualmente, um por um.
+Nível 2: Reconhece que precisa de personalização em massa mas não tem visão de automação ou escala (ex: copiar e colar prompts repetidamente).
+Nível 3: Propõe uso de template de prompt com variáveis básicas e alguma ferramenta no-code para gerar os e-mails, mas sem detalhar o fluxo de execução em lote.
+Nível 4: Propõe fluxo automatizado (script Python ou ferramentas como n8n/Make) que lê cada linha da planilha (produto, segmento, cargo), injeta as variáveis em um template de prompt dinâmico e faz requisições em lote para a API da LLM.
+Nível 5: Tudo do nível 4, mais menciona explicitamente a preocupação com limites de requisição por minuto (RPM) da API ao rodar 5.000 inputs de uma vez e como estruturar filas para evitar quedas no fluxo.` },
+    { id:'c9', type:'case', timer:130,
+      text:'O time de operações internas precisa consultar as regras operacionais da empresa, que estão espalhadas por mais de 400 manuais em formato Word, Notion e PDFs dentro do Drive. Eles passam horas procurando informações. Não podemos treinar um modelo do zero toda vez que um manual muda. Como você resolveria isso para que eles digitem uma pergunta em um chat e a IA responda trazendo o trecho exato do manual correto?',
+      criteria:`Avalie a resposta considerando os seguintes indicadores por nível:
+Nível 1: Sugere juntar todos os arquivos em um único PDF gigante e arrastar para dentro do Claude, ou criar um GPT customizado anexando tudo, sem entender limites de contexto.
+Nível 2: Reconhece que anexar tudo de uma vez não funciona bem, mas não sabe nomear ou propor uma alternativa técnica clara.
+Nível 3: Menciona a necessidade de "buscar" nos documentos antes de responder, mas sem detalhar o processo técnico de chunking, embeddings ou banco vetorial.
+Nível 4: Identifica que o cenário exige arquitetura de RAG (Retrieval-Augmented Generation) e explica o processo técnico básico: quebra de texto (chunking), transformação em vetores (embeddings) e armazenamento em banco de dados vetorial (Pinecone, Chroma, Milvus).
+Nível 5: Tudo do nível 4, mais explica o fluxo de busca completo: quando o usuário pergunta, o sistema busca os trechos mais relevantes semanticamente no banco vetorial e injeta apenas esses trechos como contexto no prompt da LLM, garantindo resposta precisa, atualizada e barata em tokens.` },
   ];
 
   const REVIEW_POOL = [

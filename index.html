@@ -1309,6 +1309,129 @@
       options:['Ainda não é relevante para o meu trabalho','É uma ferramenta de produtividade individual','É um driver de eficiência operacional em processos-chave','É um diferencial competitivo que cria novos produtos e modelos de negócio','É um ativo estratégico central que redefine o core business da empresa'] },
   ];
 
+  const ADV_MC_POOL = [
+    { id:'q13', type:'mc', text:'No contexto de engenharia de prompt avançada, qual é a principal diferença conceitual e prática entre as técnicas de "Chain-of-Thought" (CoT) e "Tree-of-Thoughts" (ToT)?',
+      options:[
+        'CoT força o modelo a traduzir o prompt para múltiplos idiomas antes de responder; ToT cria uma árvore genealógica de personas.',
+        'CoT instrui o modelo a detalhar seu raciocínio passo a passo de forma linear antes de dar a resposta final; ToT permite que o modelo gere, avalie e explore múltiplas linhas de raciocínio paralelas (ramos), permitindo retrocesso (backtracking) para encontrar a melhor solução global.',
+        'CoT é usada exclusivamente para gerar códigos de programação; ToT serve apenas para organizar pastas de arquivos.',
+        'Ambas as técnicas produzem exatamente o mesmo resultado lógico, mudando apenas a quantidade de tokens consumidos na API.',
+      ],
+      criteria:'Pergunta técnica objetiva com resposta correta única. Resposta correta: alternativa que descreve CoT como raciocínio linear passo a passo e ToT como exploração de múltiplos ramos de raciocínio com backtracking. Se o candidato não selecionar essa alternativa, o gabarito deve indicar a resposta certa e explicar por que a escolhida está incorreta.' },
+    { id:'q14', type:'mc', text:'Ao desenhar uma arquitetura RAG (Retrieval-Augmented Generation), o que representa o problema conhecido como "Lost in the Middle" (Perdido no Meio)?',
+      options:[
+        'A tendência dos modelos de linguagem de ignorar completamente o início e o fim de um prompt longo, focando apenas no centro do texto.',
+        'A incapacidade de bancos de dados vetoriais de indexarem documentos que possuem tabelas no meio das páginas.',
+        'O fenômeno em que as LLMs demonstram maior dificuldade de recuperar ou utilizar informações que estão localizadas no meio do contexto fornecido, apresentando maior acurácia apenas para dados no início ou no fim do bloco de texto.',
+        'Um erro de conexão de rede que derruba a API quando o prompt atinge exatamente 50% do limite de tokens do modelo.',
+      ],
+      criteria:'Pergunta técnica objetiva com resposta correta única. Resposta correta: a alternativa que descreve a dificuldade das LLMs em recuperar informações localizadas no meio do contexto, com maior acurácia apenas no início/fim. Se o candidato não selecionar essa alternativa, o gabarito deve indicar a resposta certa e explicar por que a escolhida está incorreta.' },
+    { id:'q15', type:'mc', text:'Você está configurando um nó de requisição de API em uma plataforma de automação (como o n8n) para extrair dados de e-mails em um formato JSON estrito para alimentar um CRM. Qual recurso nativo das LLMs mais modernas garante que a saída seja SEMPRE um JSON válido, evitando quebras no fluxo automatizado?',
+      options:[
+        'Aumentar a Temperatura (Temperature) para o valor máximo (2.0).',
+        'Ativar a funcionalidade de Structured Outputs (Saídas Estruturadas) ou JSON Mode, fornecendo um Schema (como JSON Schema) para forçar deterministicamente o formato da resposta do modelo.',
+        'Escrever no fim do prompt: "Por favor, se você quebrar o JSON eu serei demitido".',
+        'Compactar o e-mail em um arquivo .zip antes de enviá-lo para a chamada da API da LLM.',
+      ],
+      criteria:'Pergunta técnica objetiva com resposta correta única. Resposta correta: a alternativa que descreve Structured Outputs/JSON Mode com Schema. Se o candidato não selecionar essa alternativa, o gabarito deve indicar a resposta certa e explicar por que a escolhida está incorreta.' },
+    { id:'q16', type:'mc', text:'O que descreve a técnica de "Function Calling" (Chamada de Função) disponível nas APIs de modelos avançados?',
+      options:[
+        'A capacidade do modelo de reescrever seu próprio código-fonte interno em tempo de execução para aprender novas habilidades.',
+        'Um recurso que permite ao modelo analisar o prompt do usuário e, em vez de responder com texto, retornar um objeto JSON contendo argumentos para chamar uma função específica/ferramenta externa do seu próprio sistema (ex: buscar no banco de dados ou acionar um braço mecânico).',
+        'O ato de o usuário ligar para o suporte técnico do provedor de IA via comandos de voz integrados.',
+        'Uma restrição de segurança que impede a IA de executar scripts maliciosos enviados por usuários externos.',
+      ],
+      criteria:'Pergunta técnica objetiva com resposta correta única. Resposta correta: a alternativa que descreve o modelo retornando um objeto JSON com argumentos para chamar uma função/ferramenta externa. Se o candidato não selecionar essa alternativa, o gabarito deve indicar a resposta certa e explicar por que a escolhida está incorreta.' },
+    { id:'q17', type:'mc', text:'Durante o processo de preparação de dados para um sistema RAG, qual é o impacto de escolher uma estratégia de "Chunking" (fragmentação) com um tamanho de bloco muito pequeno (ex: 50 tokens) e sobreposição (overlap) zero?',
+      options:[
+        'O sistema consumirá o triplo de tokens desnecessariamente a cada busca sem melhorar a precisão.',
+        'A busca vetorial se tornará mais lenta, pois blocos menores exigem maior poder de processamento das GPUs.',
+        'Risco severo de perda de contexto semântico, fazendo com que trechos cruciais de uma mesma explicação fiquem separados e a IA receba fragmentos isolados incapazes de responder à pergunta de forma coerente.',
+        'O modelo automaticamente entrará em loop de alucinação por falta de caracteres especiais.',
+      ],
+      criteria:'Pergunta técnica objetiva com resposta correta única. Resposta correta: a alternativa que descreve o risco de perda de contexto semântico com chunks pequenos sem overlap. Se o candidato não selecionar essa alternativa, o gabarito deve indicar a resposta certa e explicar por que a escolhida está incorreta.' },
+    { id:'q18', type:'mc', text:'O que diferencia um modelo de "Embeddings" de um modelo de geração de texto (LLM tradicional)?',
+      options:[
+        'O modelo de embeddings serve para gerar imagens realistas, enquanto a LLM gera apenas textos e códigos.',
+        'O modelo de embeddings transforma textos, frases ou documentos em vetores matemáticos (listas de números) que representam seu significado semântico em um espaço multidimensional, enquanto a LLM processa esses vetores para gerar linguagem natural textual.',
+        'Embeddings são modelos muito maiores e mais caros de rodar do que modelos como GPT-4 ou Claude 3.5 Sonnet.',
+        'Nenhuma das alternativas; "embeddings" é apenas o nome dado ao histórico de conversas salvas no navegador do usuário.',
+      ],
+      criteria:'Pergunta técnica objetiva com resposta correta única. Resposta correta: a alternativa que descreve embeddings como vetores matemáticos de significado semântico. Se o candidato não selecionar essa alternativa, o gabarito deve indicar a resposta certa e explicar por que a escolhida está incorreta.' },
+    { id:'q19', type:'mc', text:'Na arquitetura de Agentes de IA autônomos utilizando frameworks como CrewAI ou LangChain, o que é o "ReAct framework" (Reasoning and Acting)?',
+      options:[
+        'Um sistema de segurança que faz a IA "reagir" bloqueando o usuário caso ele faça perguntas sobre pirataria.',
+        'Um padrão de design onde o agente combina de forma iterativa etapas de Pensamento (raciocínio sobre o problema), Ação (execução de uma ferramenta externa como busca na web ou rodar código) e Observação (leitura do resultado da ação) até que o objetivo final seja atingido.',
+        'Uma biblioteca de interface visual utilizada para construir painéis e dashboards onde os robôs são gerenciados.',
+        'O processo de reaquecer os servidores de inteligência artificial após longos períodos de inatividade do sistema.',
+      ],
+      criteria:'Pergunta técnica objetiva com resposta correta única. Resposta correta: a alternativa que descreve o ciclo Pensamento-Ação-Observação. Se o candidato não selecionar essa alternativa, o gabarito deve indicar a resposta certa e explicar por que a escolhida está incorreta.' },
+    { id:'q20', type:'mc', text:'Ao implementar IA em larga escala na empresa, o parâmetro "Top P" (também conhecido como Nucleus Sampling) na API serve para:',
+      options:[
+        'Determinar a prioridade da sua requisição na fila dos servidores do provedor (valores maiores garantem menor latência).',
+        'Controlar o pool de palavras que o modelo considera para a próxima resposta com base em sua probabilidade acumulada (ex: Top P de 0.1 significa que o modelo só considerará o top 10% de palavras mais prováveis, tornando a resposta extremamente previsível).',
+        'Definir o número máximo de usuários que podem interagir com a ferramenta de IA simultaneamente.',
+        'Filtrar palavras de baixo calão e termos ofensivos diretamente na saída do modelo.',
+      ],
+      criteria:'Pergunta técnica objetiva com resposta correta única. Resposta correta: a alternativa que descreve Top P como controle do pool de palavras por probabilidade acumulada (nucleus sampling). Se o candidato não selecionar essa alternativa, o gabarito deve indicar a resposta certa e explicar por que a escolhida está incorreta.' },
+    { id:'q21', type:'mc', text:'Qual é a principal desvantagem ou trade-off de realizar o Fine-Tuning (ajuste fino) de um modelo de linguagem de código aberto (como o Llama) em vez de utilizar uma arquitetura RAG para fornecer conhecimento corporativo atualizado?',
+      options:[
+        'O Fine-Tuning não permite alterar o tom ou o estilo de escrita do modelo, servindo apenas para injetar dados matemáticos brutas.',
+        'O Fine-Tuning sofre com rigidez temporal (o conhecimento fica congelado no momento do treino) e alto custo/complexidade computacional, além do risco de "esquecimento catastrófico", onde o modelo perde habilidades gerais ao ser supertreinado em um nicho.',
+        'O modelo ajustado via Fine-Tuning torna-se incapaz de interagir com APIs ou ler arquivos estruturados em formato JSON.',
+        'Nenhuma; o Fine-Tuning é sempre a opção mais barata, rápida e eficiente para qualquer cenário empresarial de atualização de dados.',
+      ],
+      criteria:'Pergunta técnica objetiva com resposta correta única. Resposta correta: a alternativa que descreve rigidez temporal, custo/complexidade e esquecimento catastrófico. Se o candidato não selecionar essa alternativa, o gabarito deve indicar a resposta certa e explicar por que a escolhida está incorreta.' },
+    { id:'q22', type:'mc', text:'O que caracteriza um ataque de "Prompt Injection Indireto" em sistemas corporativos baseados em IA?',
+      options:[
+        'Quando um funcionário da empresa compartilha sua senha de acesso à API com usuários externos.',
+        'Quando um invasor ganha acesso direto ao prompt de sistema (system prompt) alterando as regras na base de código da aplicação.',
+        'Quando instruções maliciosas são escondidas dentro de fontes de dados externas (como uma página web, um PDF de currículo ou um e-mail) que a IA vai ler/processar através de um sistema RAG ou automação, fazendo com que ela desobedeça suas regras originais de segurança.',
+        'Um vírus de computador tradicional que corrompe os arquivos de instalação do Python na máquina do desenvolvedor.',
+      ],
+      criteria:'Pergunta técnica objetiva com resposta correta única. Resposta correta: a alternativa que descreve instruções maliciosas escondidas em dados externos processados pela IA. Se o candidato não selecionar essa alternativa, o gabarito deve indicar a resposta certa e explicar por que a escolhida está incorreta.' },
+    { id:'q23', type:'mc', text:'Em termos de custos de infraestrutura de IA baseada em consumo de APIs, qual é a diferença típica de precificação e processamento entre "Input Tokens" (Tokens de Entrada) e "Output Tokens" (Tokens de Saída)?',
+      options:[
+        'Tokens de entrada são processados de forma assíncrona e, por isso, são até 10 vezes mais caros que os tokens de saída.',
+        'Tokens de entrada referem-se ao prompt enviado pelo usuário e documentos injetados; tokens de saída referem-se à resposta gerada. Geralmente, os tokens de saída são significativamente mais caros devido ao custo computacional de geração autoregressiva token a token.',
+        'Os provedores cobram apenas pelos tokens de saída; os tokens de entrada sempre possuem custo zero para incentivar prompts longos.',
+        'Ambos possuem exatamente o mesmo custo financeiro e peso computacional nas placas de vídeo (GPUs) do servidor.',
+      ],
+      criteria:'Pergunta técnica objetiva com resposta correta única. Resposta correta: a alternativa que descreve tokens de saída como geralmente mais caros devido à geração autoregressiva. Se o candidato não selecionar essa alternativa, o gabarito deve indicar a resposta certa e explicar por que a escolhida está incorreta.' },
+    { id:'q24', type:'mc', text:'O que descreve o conceito de "Context Window" (Janela de Contexto) de uma LLM?',
+      options:[
+        'O tempo máximo (em segundos) que a tela do chat do usuário pode ficar aberta antes de expirar a sessão por inatividade.',
+        'A quantidade máxima de dados (somando prompt de entrada e resposta de saída) expressa em tokens que o modelo consegue reter na memória operacional em uma única interação.',
+        'O tamanho da janela gráfica de visualização de dados nas ferramentas de Business Intelligence integradas à IA.',
+        'A quantidade de idiomas que o modelo consegue traduzir simultaneamente sem misturar a gramática nas respostas.',
+      ],
+      criteria:'Pergunta técnica objetiva com resposta correta única. Resposta correta: a alternativa que descreve a quantidade máxima de tokens (entrada + saída) que o modelo retém por interação. Se o candidato não selecionar essa alternativa, o gabarito deve indicar a resposta certa e explicar por que a escolhida está incorreta.' },
+    { id:'q25', type:'mc', text:'No desenvolvimento de sistemas de IA, o que avalia a métrica de benchmark conhecida como "MMLU" (Massive Multitask Language Understanding)?',
+      options:[
+        'A velocidade bruta de geração de palavras por segundo em diferentes tipos de conexões de internet.',
+        'A capacidade de um modelo de linguagem de compreender e resolver problemas em uma vasta gama de disciplinas humanas e exatas (da matemática à história e direito) em múltiplos níveis de complexidade.',
+        'O nível de consumo de energia das CPUs e GPUs durante o treinamento inicial de um modelo fundacional.',
+        'A taxa de cliques e engajamento dos usuários finais em interfaces baseadas em chatbots automatizados.',
+      ],
+      criteria:'Pergunta técnica objetiva com resposta correta única. Resposta correta: a alternativa que descreve a capacidade do modelo de resolver problemas em múltiplas disciplinas. Se o candidato não selecionar essa alternativa, o gabarito deve indicar a resposta certa e explicar por que a escolhida está incorreta.' },
+    { id:'q26', type:'mc', text:'Você precisa implementar um sistema de IA para auditar contratos jurídicos gigantescos (com centenas de páginas cada). O orçamento é limitado e você não pode correr o risco de o modelo omitir cláusulas no meio do documento. Qual técnica avançada de RAG melhor soluciona o desafio de focar nos trechos exatos de maior risco?',
+      options:[
+        'Desativar o uso de embeddings e mandar o contrato inteiro picotado em 50 prompts manuais separados no chat comum.',
+        'Implementar uma estratégia de Parent-Child Retrieval ou Hierarchical Chunking combinada com um algoritmo de Reranking (como o Cohere Rerank) após a busca vetorial para reclassificar de forma hiperprecisa os trechos de maior relevância antes de enviá-los à LLM.',
+        'Aumentar o parâmetro de Temperatura da API para 1.5 para forçar a IA a ler as entrelinhas jurídicas do contrato.',
+        'Utilizar um modelo de geração de imagens para converter as páginas do contrato em fotos e depois processá-las via OCR simples.',
+      ],
+      criteria:'Pergunta técnica objetiva com resposta correta única. Resposta correta: a alternativa que descreve Parent-Child Retrieval/Hierarchical Chunking com Reranking. Se o candidato não selecionar essa alternativa, o gabarito deve indicar a resposta certa e explicar por que a escolhida está incorreta.' },
+    { id:'q27', type:'mc', text:'Sob a ótica de Governança, Compliance e Gestão de Riscos de IA corporativa, qual das seguintes práticas mitiga diretamente o risco de infração de Propriedade Intelectual (Copyright) ao utilizar modelos abertos ou comerciais em produtos da sua empresa?',
+      options:[
+        'Garantir que os colaboradores usem pseudônimos ao interagir com as plataformas de inteligência artificial.',
+        'Utilizar exclusivamente modelos cujos provedores ofereçam cláusulas contratuais de indenização por propriedade intelectual (IP Indemnification) para clientes corporativos e validar se os datasets de fine-tuning interno contêm dados protegidos por direitos autorais sem licenciamento.',
+        'Adicionar a frase "Não pretendo violar direitos autorais" no início de todos os códigos desenvolvidos por IA.',
+        'Limitar o uso das ferramentas de inteligência artificial apenas para o período noturno da jornada de trabalho.',
+      ],
+      criteria:'Pergunta técnica objetiva com resposta correta única. Resposta correta: a alternativa que descreve cláusulas de IP Indemnification e validação de datasets de fine-tuning. Se o candidato não selecionar essa alternativa, o gabarito deve indicar a resposta certa e explicar por que a escolhida está incorreta.' },
+  ];
+
   const CASE_POOL = [
     { id:'c1', type:'case', timer:130,
       text:'Você é gestor de marketing em uma empresa de médio porte. Seu maior concorrente acabou de lançar uma campanha viral usando IA generativa para criar conteúdo personalizado em escala. Sua equipe tem 3 pessoas — nenhuma técnica — e 2 semanas para reagir. Como você usaria IA para montar uma resposta competitiva? Detalhe as ferramentas, o processo e como mediria o resultado.',
@@ -1434,7 +1557,9 @@ Nível 5: Propõe arquitetura com validação automática cruzando com fonte de 
   }
 
   function buildTestQuestions() {
-    const mcs = shuffle(MC_POOL).slice(0, 8).map(q => ({
+    const basicMcs = shuffle(MC_POOL).slice(0, 4);
+    const advMcs   = shuffle(ADV_MC_POOL).slice(0, 4);
+    const mcs = shuffle([...basicMcs, ...advMcs]).map(q => ({
       ...q,
       options: shuffle(q.options),
     }));
@@ -1626,7 +1751,7 @@ Nível 5: Propõe arquitetura com validação automática cruzando com fonte de 
 
     const q = TEST_QUESTIONS[currentQ];
     const label = String.fromCharCode(65 + optIdx);
-    testAnswers.push({ question_id: qId, question_type: 'mc', question_text: q.text, answer_text: optText, option_label: label });
+    testAnswers.push({ question_id: qId, question_type: 'mc', question_text: q.text, answer_text: optText, option_label: label, criteria: q.criteria || null });
 
     appendUserMsg(`${label}) ${optText}`);
     currentQ++;

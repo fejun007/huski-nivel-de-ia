@@ -927,13 +927,13 @@
 
     // Orb pulsa enquanto busca o áudio
     orb?.classList.add('speaking');
-    el.innerHTML = '<span class="cursor-blink"></span>';
+    el.innerHTML = '<span style="font-family:\'DM Mono\',monospace;font-size:12px;color:var(--muted);letter-spacing:0.05em;">processando sua resposta...</span>';
 
     fetchAudio(scriptText).then(audioObj => {
       orb?.classList.remove('speaking');
       if (audioObj) {
         orb?.classList.add('speaking');
-        audioObj.play();
+        audioObj.play().catch(() => {});
       }
       typeWriter(scriptText, el, charsPerMs, () => {
         // Mostra input/botão após terminar de digitar
@@ -1017,13 +1017,13 @@
 
   // ── Loading screen ────────────────────────────────────────────
   const LOADING_STEPS = [
-    { pct: 12,  msg: 'inicializando ambiente seguro...',                  ms: 600  },
-    { pct: 26,  msg: 'carregando sua simulação...',                       ms: 700  },
-    { pct: 44,  msg: 'endereçando agentes exclusivos para observação...', ms: 800  },
-    { pct: 60,  msg: 'calibrando métricas de avaliação...',               ms: 700  },
-    { pct: 76,  msg: 'preparando sua experiência personalizada...',       ms: 800  },
-    { pct: 88,  msg: 'carregando voz da ARIA...',                         ms: 600  },
-    { pct: 96,  msg: 'sincronizando áudio e texto...',                    ms: 500  },
+    { pct: 10,  msg: 'inicializando ambiente seguro...',                        ms: 1100 },
+    { pct: 24,  msg: 'verificando protocolos de avaliação...',                  ms: 1200 },
+    { pct: 40,  msg: 'endereçando agentes exclusivos para observação...',        ms: 1300 },
+    { pct: 56,  msg: 'calibrando métricas de maturidade em IA...',              ms: 1200 },
+    { pct: 72,  msg: 'preparando sua experiência personalizada...',              ms: 1300 },
+    { pct: 86,  msg: 'sincronizando inteligência conversacional...',             ms: 1100 },
+    { pct: 96,  msg: 'finalizando configurações...',                             ms: 900  },
   ];
 
   function runLoadingScreen(onDone) {
@@ -1054,9 +1054,8 @@
       if (i >= LOADING_STEPS.length) {
         animDone = true;
         checkReady();
-        // Se áudio ainda não chegou, espera (polling) e mostra mensagem
+        // Se áudio ainda não chegou, espera em silêncio
         if (preloadedAudio === null) {
-          msg.textContent = 'aguardando voz da ARIA...';
           const iv = setInterval(() => {
             if (preloadedAudio !== null) {
               clearInterval(iv);

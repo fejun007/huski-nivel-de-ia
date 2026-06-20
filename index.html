@@ -541,6 +541,53 @@
   }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
+  /* ── Loading screen ──────────────────────────────────────────── */
+  .loading-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--ink);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    z-index: 300;
+    transition: opacity 0.6s ease;
+  }
+  .loading-screen.fade-out {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .loading-brand {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--white);
+  }
+  .loading-brand span { color: var(--pulse); opacity: 0.7; }
+  .loading-bar-wrap {
+    width: 220px;
+    height: 2px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .loading-bar {
+    height: 100%;
+    background: var(--pulse);
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+  .loading-msg {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-align: center;
+    min-height: 16px;
+  }
+
   .ob-input-group {
     width: 100%;
     display: flex;
@@ -609,6 +656,15 @@
 </style>
 </head>
 <body>
+
+<!-- Loading Screen -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="loading-brand"><span>[</span>H<span>]</span> huski</div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;max-width:280px">
+    <div class="loading-bar-wrap"><div class="loading-bar" id="loadingBar"></div></div>
+    <div class="loading-msg" id="loadingMsg">inicializando ambiente seguro...</div>
+  </div>
+</div>
 
 <!-- Onboarding Overlay -->
 <div class="onboarding-overlay" id="onboardingOverlay">
@@ -872,9 +928,43 @@
     }
   }
 
+  // ── Loading screen ────────────────────────────────────────────
+  const LOADING_STEPS = [
+    { pct: 18,  msg: 'inicializando ambiente seguro...'            },
+    { pct: 38,  msg: 'carregando sua simulação...'                 },
+    { pct: 58,  msg: 'endereçando agentes exclusivos para observação...' },
+    { pct: 76,  msg: 'calibrando métricas de avaliação...'         },
+    { pct: 92,  msg: 'preparando sua experiência personalizada...' },
+    { pct: 100, msg: 'tudo pronto!'                                },
+  ];
+
+  function runLoadingScreen(onDone) {
+    const bar = document.getElementById('loadingBar');
+    const msg = document.getElementById('loadingMsg');
+    let i = 0;
+
+    function nextStep() {
+      if (i >= LOADING_STEPS.length) {
+        const screen = document.getElementById('loadingScreen');
+        screen.classList.add('fade-out');
+        setTimeout(onDone, 650);
+        return;
+      }
+      const s = LOADING_STEPS[i++];
+      bar.style.width = s.pct + '%';
+      msg.textContent = s.msg;
+      setTimeout(nextStep, i === LOADING_STEPS.length ? 600 : 520);
+    }
+
+    nextStep();
+  }
+
   // Inicia o onboarding assim que a página carrega
   window.addEventListener('load', () => {
-    setTimeout(() => showObStep(0), 400);
+    runLoadingScreen(() => {
+      document.getElementById('loadingScreen').style.display = 'none';
+      setTimeout(() => showObStep(0), 200);
+    });
   });
 
   function autoResize(el) {

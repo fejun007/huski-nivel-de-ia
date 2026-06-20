@@ -1243,10 +1243,10 @@
       text:'Sua empresa recebeu 500 currículos para uma vaga de engenheiro sênior. O RH tem 3 dias para fazer a triagem inicial. A diretora de pessoas pediu sua ajuda para usar IA no processo. Que solução você desenharia do início ao fim? Considere os riscos éticos, como mitigá-los e quais critérios seriam avaliados automaticamente vs. por humanos.' },
 
     // ── Review Reverso ─────────────────────────────────────────
-    { id:'r1', type:'review',
+    { id:'r1', type:'review', timer:130,
       text:'Analise o prompt abaixo e identifique todos os problemas. Como você o reescreveria para obter um resultado muito melhor?',
       artifact:'Faça um resumo do documento anexo e liste os pontos principais.' },
-    { id:'r2', type:'review',
+    { id:'r2', type:'review', timer:130,
       text:'Analise o fluxo de automação abaixo e aponte o que pode dar errado. Que salvaguardas você adicionaria?',
       artifact:'1. Usuário envia e-mail\n2. IA lê o conteúdo do e-mail\n3. IA gera uma resposta completa\n4. Sistema envia a resposta automaticamente sem revisão humana' },
   ];
@@ -1350,11 +1350,15 @@
             Enviar resposta →
           </button>
         </div>`;
-      startCaseTimer(q.id);
+      startCaseTimer(q.id, 'case');
     } else if (q.type === 'review') {
       area.innerHTML = `
         <div style="padding:12px 24px 20px;display:flex;flex-direction:column;gap:10px;">
-          <textarea id="reviewInput" class="ob-input" rows="5"
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);">tempo restante</div>
+            <div id="caseTimer" style="font-family:'DM Mono',monospace;font-size:20px;color:var(--alert);font-weight:600;">2:10</div>
+          </div>
+          <textarea id="reviewInput" class="ob-input" rows="4"
             placeholder="Descreva os problemas que encontrou e como você melhoraria..."
             style="resize:vertical;"></textarea>
           <div class="record-row">
@@ -1371,6 +1375,7 @@
             Enviar análise →
           </button>
         </div>`;
+      startCaseTimer(q.id, 'review');
     }
     document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
   }
@@ -1445,7 +1450,7 @@
     setTimeout(() => showTestQuestion(currentQ), 600);
   }
 
-  function startCaseTimer(qId) {
+  function startCaseTimer(qId, type) {
     clearCaseTimer();
     caseSecsLeft = 130;
     function tick() {
@@ -1457,7 +1462,7 @@
       el.style.color = caseSecsLeft <= 30 ? '#FF3B3B' : 'var(--alert)';
       if (caseSecsLeft <= 0) {
         clearCaseTimer();
-        submitCaseOrReview(qId, 'case');
+        submitCaseOrReview(qId, type);
         return;
       }
       caseSecsLeft--;

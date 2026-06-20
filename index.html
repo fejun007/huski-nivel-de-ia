@@ -1055,28 +1055,29 @@
   const STEP0_TEXT = 'Olá! Seja muito bem-vindo à avaliação de maturidade em IA da Huski. Meu nome é ARIA e vou te acompanhar nessa jornada. Essa avaliação foi criada para mapear exatamente em qual estágio de uso de inteligência artificial você está hoje — sem julgamentos e sem respostas certas ou erradas. Antes de começarmos… como posso te chamar?';
 
   window.addEventListener('load', () => {
-    // Pré-carrega o áudio enquanto o loading roda
+    // Pré-carrega o áudio enquanto o loading roda em paralelo
     fetchAudio(STEP0_TEXT).then(audio => { preloadedAudio = audio; });
 
     runLoadingScreen(() => {
-      // Esta função é chamada DIRETO no onclick do botão — mesmo call stack do gesto
-      // Então play() é permitido pelo browser sem bloqueio de autoplay
+      // ── Chamado direto no onclick ──────────────────────────────
+      // 1) Criar AudioContext aqui desbloqueia autoplay para toda a sessão
+      //    (Chrome: após essa linha, play() pode ser chamado de qualquer async)
+      try {
+        const unlockCtx = new (window.AudioContext || window.webkitAudioContext)();
+        unlockCtx.resume().then(() => unlockCtx.close()).catch(() => {});
+      } catch(_) {}
+
+      // 2) Fade-out do loading
+      const screen = document.getElementById('loadingScreen');
+      screen.classList.add('fade-out');
+      setTimeout(() => { screen.style.display = 'none'; }, 700);
 
       const el  = document.getElementById('speechText');
       const orb = document.getElementById('ariaOrb');
       const charsPerMs = STEP0_TEXT.length > 200 ? 28 : 20;
 
-      // Esconde loading e mostra onboarding
-      const screen = document.getElementById('loadingScreen');
-      screen.classList.add('fade-out');
-      setTimeout(() => { screen.style.display = 'none'; }, 700);
-
-      // Play + typewriter disparam juntos no mesmo frame do click
-      if (preloadedAudio) {
-        orb?.classList.add('speaking');
-        preloadedAudio.play().catch(() => {});
-      }
-
+      // 3) Inicia typewriter imediatamente (com orb pulsando)
+      orb?.classList.add('speaking');
       typeWriter(STEP0_TEXT, el, charsPerMs, () => {
         const inp = document.getElementById('obInputGroup');
         const btn = document.getElementById('btnOb');
@@ -1091,6 +1092,26 @@
         }, 200);
       });
       setDot(0);
+
+      // 4) Toca o áudio assim que estiver pronto (AudioContext já desbloqueado)
+      const tryPlay = async () => {
+        if (!preloadedAudio) {
+          // Aguarda chegada do áudio (Railway pode ter cold start)
+          await new Promise(resolve => {
+            const iv = setInterval(() => {
+              if (preloadedAudio !== null) { clearInterval(iv); resolve(); }
+            }, 150);
+            setTimeout(() => { clearInterval(iv); resolve(); }, 12000);
+          });
+        }
+        if (preloadedAudio) {
+          preloadedAudio.play().catch(err => console.warn('play() falhou:', err));
+        } else {
+          console.warn('Áudio não carregou (backend offline?)');
+          orb?.classList.remove('speaking');
+        }
+      };
+      tryPlay();
     });
   });
 

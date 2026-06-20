@@ -1264,17 +1264,21 @@
 
     // ── Cases ─────────────────────────────────────────────────
     { id:'c1', type:'case', timer:130,
-      text:'Você é gestor de marketing em uma empresa de médio porte. Seu maior concorrente acabou de lançar uma campanha viral usando IA generativa para criar conteúdo personalizado em escala. Sua equipe tem 3 pessoas — nenhuma técnica — e 2 semanas para reagir. Como você usaria IA para montar uma resposta competitiva? Detalhe as ferramentas, o processo e como mediria o resultado.' },
+      text:'Você é gestor de marketing em uma empresa de médio porte. Seu maior concorrente acabou de lançar uma campanha viral usando IA generativa para criar conteúdo personalizado em escala. Sua equipe tem 3 pessoas — nenhuma técnica — e 2 semanas para reagir. Como você usaria IA para montar uma resposta competitiva? Detalhe as ferramentas, o processo e como mediria o resultado.',
+      criteria:'Critérios de avaliação: (1) Identifica ferramentas de IA acessíveis para equipe não-técnica (Canva IA, Copy.ai, ChatGPT, etc); (2) Propõe fluxo de trabalho estruturado e realista para 2 semanas; (3) Considera o perfil da equipe sem conhecimento técnico; (4) Define métricas de resultado concretas (engajamento, alcance, conversão); (5) Demonstra visão estratégica além do operacional.' },
     { id:'c2', type:'case', timer:130,
-      text:'Sua empresa recebeu 500 currículos para uma vaga de engenheiro sênior. O RH tem 3 dias para fazer a triagem inicial. A diretora de pessoas pediu sua ajuda para usar IA no processo. Que solução você desenharia do início ao fim? Considere os riscos éticos, como mitigá-los e quais critérios seriam avaliados automaticamente vs. por humanos.' },
+      text:'Sua empresa recebeu 500 currículos para uma vaga de engenheiro sênior. O RH tem 3 dias para fazer a triagem inicial. A diretora de pessoas pediu sua ajuda para usar IA no processo. Que solução você desenharia do início ao fim? Considere os riscos éticos, como mitigá-los e quais critérios seriam avaliados automaticamente vs. por humanos.',
+      criteria:'Critérios de avaliação: (1) Propõe critérios claros para triagem automática vs. revisão humana; (2) Identifica e mitiga riscos de viés algorítmico; (3) Menciona ferramentas ou APIs específicas de forma realista; (4) Considera compliance, LGPD e privacidade de dados; (5) Demonsta pensamento sobre auditabilidade e transparência do processo.' },
 
     // ── Review Reverso ─────────────────────────────────────────
     { id:'r1', type:'review', timer:130,
       text:'Analise o prompt abaixo e identifique todos os problemas. Como você o reescreveria para obter um resultado muito melhor?',
-      artifact:'Faça um resumo do documento anexo e liste os pontos principais.' },
+      artifact:'Faça um resumo do documento anexo e liste os pontos principais.',
+      criteria:'Critérios de avaliação: (1) Identifica ausência de persona/papel para a IA; (2) Aponta falta de contexto sobre o documento e o objetivo; (3) Identifica ausência de formato de saída definido; (4) Aponta falta de restrições (tamanho, linguagem, público-alvo); (5) Reescreve o prompt com estrutura clara e significativamente melhor.' },
     { id:'r2', type:'review', timer:130,
       text:'Analise o fluxo de automação abaixo e aponte o que pode dar errado. Que salvaguardas você adicionaria?',
-      artifact:'1. Usuário envia e-mail\n2. IA lê o conteúdo do e-mail\n3. IA gera uma resposta completa\n4. Sistema envia a resposta automaticamente sem revisão humana' },
+      artifact:'1. Usuário envia e-mail\n2. IA lê o conteúdo do e-mail\n3. IA gera uma resposta completa\n4. Sistema envia a resposta automaticamente sem revisão humana',
+      criteria:'Critérios de avaliação: (1) Identifica o risco crítico de envio automático sem revisão humana; (2) Propõe loop de aprovação ou revisão antes do envio; (3) Menciona tratamento de erros e edge cases (spam, conteúdo sensível, e-mails ambíguos); (4) Sugere mecanismo de logging e auditoria; (5) Propõe melhorias de arquitetura como filas, retry e alertas.' },
   ];
 
   let testAnswers  = [];
@@ -1470,7 +1474,13 @@
     if (!val) { alert('Por favor, escreva ou grave sua resposta antes de continuar.'); return; }
 
     const q = TEST_QUESTIONS[currentQ];
-    testAnswers.push({ question_id: qId, question_type: type, question_text: q.text, answer_text: val });
+    testAnswers.push({
+      question_id: qId,
+      question_type: type,
+      question_text: q.text,
+      answer_text: val,
+      criteria: q.criteria || null,
+    });
     appendUserMsg(val);
     currentQ++;
     setTimeout(() => showTestQuestion(currentQ), 600);

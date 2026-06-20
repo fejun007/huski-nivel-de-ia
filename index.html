@@ -1242,44 +1242,132 @@
     mediaRecorder = null;
   }
 
-  // ── Banco de questões ────────────────────────────────────────
-  const TEST_QUESTIONS = [
-    // ── Múltipla Escolha ─────────────────────────────────────
+  // ── Banco de questões (pools para randomização) ───────────────
+
+  const MC_POOL = [
     { id:'q1', type:'mc', text:'Com que frequência você usa ferramentas de IA no seu trabalho?',
-      options:['Raramente ou nunca','Algumas vezes por semana','Todos os dias para tarefas pontuais','É parte central do meu fluxo diário','Construo soluções de IA para outros usarem'] },
-    { id:'q2', type:'mc', text:'Qual das opções descreve melhor como você escreve prompts para IA?',
-      options:['Frases curtas e diretas, sem estrutura','Defino persona, contexto e formato de saída','Crio System Prompts com variáveis e instruções complexas','Desenvolvo prompts de orquestração para agentes autônomos','O prompt é secundário — foco em fine-tuning e arquitetura'] },
+      options:['Raramente ou nunca','Algumas vezes por semana','Todos os dias para tarefas pontuais','É parte central do meu fluxo de trabalho diário','Construo soluções de IA para outros usarem'] },
+    { id:'q2', type:'mc', text:'Como você escreve suas instruções (prompts) para a IA?',
+      options:['Frases curtas e diretas, sem estrutura','Defino persona, contexto e formato de saída esperado','Crio System Prompts com variáveis e instruções complexas','Desenvolvo prompts de orquestração para agentes autônomos','O prompt é secundário — foco em fine-tuning e arquitetura de modelos'] },
     { id:'q3', type:'mc', text:'Qual é o seu nível de uso de automação com IA?',
-      options:['Não uso automações','Uso ferramentas prontas (Zapier básico, integrações nativas)','Crio automações no-code / low-code (n8n, Make, Zapier avançado)','Desenvolvo agentes autônomos com LangChain, CrewAI ou similares','Arquiteto sistemas multi-agente em produção'] },
+      options:['Não uso automações','Uso ferramentas prontas (Zapier básico, integrações nativas)','Crio automações no-code/low-code (n8n, Make, Zapier avançado)','Desenvolvo agentes autônomos com LangChain, CrewAI ou similares','Arquiteto sistemas multi-agente em produção'] },
     { id:'q4', type:'mc', text:'Como você lida com alucinações e erros das IAs?',
-      options:['Aceito as respostas sem questionar muito','Verifico informações críticas em outras fontes','Implemento loops de validação e tratamento de erros nos fluxos','Desenvolvo benchmarks para avaliar qualidade em escala','Defino métricas e governança de qualidade para toda a organização'] },
+      options:['Aceito as respostas sem questionar muito','Sempre verifico informações críticas em outras fontes','Implemento loops de validação e tratamento de erros nos meus fluxos','Desenvolvo benchmarks próprios para avaliar qualidade em escala','Defino métricas e governança de qualidade de IA para toda a organização'] },
     { id:'q5', type:'mc', multi:true, text:'Qual das ações abaixo você já realizou? (selecione todas que se aplicam)',
-      options:['Usei ChatGPT para escrever textos ou tirar dúvidas','Integrei IA a planilhas, e-mails ou ferramentas do dia a dia','Conectei APIs de LLMs a outras ferramentas via código ou plataformas','Implementei RAG (busca em documentos próprios) ou function calling','Fiz fine-tuning de um modelo de linguagem aberto'] },
+      options:['Usei ChatGPT para escrever textos ou tirar dúvidas','Integrei IA a planilhas, e-mails ou ferramentas do dia a dia','Conectei APIs de LLMs a outras ferramentas via código ou plataformas no-code','Implementei RAG (busca em documentos próprios) ou function calling','Fiz fine-tuning de um modelo de linguagem aberto'] },
     { id:'q6', type:'mc', text:'Como a IA impacta seu trabalho hoje?',
       options:['Pouco ou nenhum impacto ainda','Me ajuda a fazer tarefas existentes mais rápido','Automatizou processos inteiros, liberando tempo para estratégia','Criei novos produtos ou serviços que não existiriam sem IA','Influencio a estratégia de IA da minha organização ou mercado'] },
     { id:'q7', type:'mc', text:'Qual conceito ou ferramenta você domina melhor?',
-      options:['ChatGPT, Gemini, Claude (interfaces web)','Engenharia de prompt, few-shot, chain-of-thought','APIs de LLMs, embeddings, bancos vetoriais','Agentes autônomos, RAG, function calling, orquestração','Fine-tuning, RLHF, hiperparâmetros, arquitetura de modelos'] },
-    { id:'q8', type:'mc', text:'Quando usa IA para resolver um problema complexo, como age?',
-      options:['Peço a resposta diretamente e uso o que vier','Faço múltiplas tentativas refinando o prompt','Estruturo uma cadeia de prompts ou crio um fluxo automatizado','Delego sub-tarefas a agentes especializados com memória e ferramentas','Defino arquitetura, escolho modelos e cuido da infraestrutura'] },
+      options:['ChatGPT, Gemini, Claude (interfaces web)','Engenharia de prompt: few-shot, chain-of-thought, role prompting','APIs de LLMs, embeddings, bancos vetoriais','Agentes autônomos, RAG, function calling, orquestração multi-agente','Fine-tuning, RLHF, hiperparâmetros e arquitetura de modelos'] },
+    { id:'q8', type:'mc', text:'Quando usa IA para resolver um problema complexo, como costuma agir?',
+      options:['Peço a resposta diretamente e uso o que vier','Faço múltiplas tentativas refinando o prompt até ficar bom','Estruturo uma cadeia de prompts ou crio um fluxo automatizado','Delego sub-tarefas a agentes especializados com memória e ferramentas','Defino a arquitetura do sistema, escolho os modelos e cuido da infraestrutura'] },
+    { id:'q9', type:'mc', text:'Como você avalia a qualidade das respostas que a IA gera?',
+      options:['Pela intuição — se parece certo, uso','Comparo com fontes externas para validar o conteúdo','Tenho critérios definidos e processo de revisão estruturado','Uso métricas automáticas (BLEU, ROUGE, LLM-as-judge) integradas ao pipeline','Desenvolvo e mantenho benchmarks próprios com casos de teste específicos do negócio'] },
+    { id:'q10', type:'mc', text:'Como você lida com dados sensíveis ou confidenciais ao usar IA?',
+      options:['Não penso muito nisso','Evito colar dados sensíveis nas ferramentas','Uso ferramentas com políticas claras de privacidade e termos corporativos','Implemento anonimização, mascaramento de dados e controles de acesso','Defino políticas de governança de dados de IA para toda a organização'] },
+    { id:'q11', type:'mc', text:'Qual é sua experiência com personalização de modelos de IA?',
+      options:['Nunca personalizei — uso modelos prontos como são','Ajustei configurações básicas como temperatura e system prompt','Criei GPTs, assistentes customizados ou conectores com APIs próprias','Implementei RAG com dados proprietários ou fine-tuning supervisionado leve','Realizei fine-tuning completo, RLHF ou treinamento de modelos especialistas'] },
+    { id:'q12', type:'mc', text:'Como você enxerga o papel da IA na estratégia da sua organização?',
+      options:['Ainda não é relevante para o meu trabalho','É uma ferramenta de produtividade individual','É um driver de eficiência operacional em processos-chave','É um diferencial competitivo que cria novos produtos e modelos de negócio','É um ativo estratégico central que redefine o core business da empresa'] },
+  ];
 
-    // ── Cases ─────────────────────────────────────────────────
+  const CASE_POOL = [
     { id:'c1', type:'case', timer:130,
       text:'Você é gestor de marketing em uma empresa de médio porte. Seu maior concorrente acabou de lançar uma campanha viral usando IA generativa para criar conteúdo personalizado em escala. Sua equipe tem 3 pessoas — nenhuma técnica — e 2 semanas para reagir. Como você usaria IA para montar uma resposta competitiva? Detalhe as ferramentas, o processo e como mediria o resultado.',
-      criteria:'Critérios de avaliação: (1) Identifica ferramentas de IA acessíveis para equipe não-técnica (Canva IA, Copy.ai, ChatGPT, etc); (2) Propõe fluxo de trabalho estruturado e realista para 2 semanas; (3) Considera o perfil da equipe sem conhecimento técnico; (4) Define métricas de resultado concretas (engajamento, alcance, conversão); (5) Demonstra visão estratégica além do operacional.' },
+      criteria:`Avalie a resposta considerando os seguintes indicadores por nível:
+Nível 1: Resposta vaga, sem ferramentas específicas, sem plano de ação.
+Nível 2: Menciona ferramentas básicas (ChatGPT, Canva) mas sem workflow estruturado nem métricas.
+Nível 3: Propõe workflow com ferramentas no-code acessíveis à equipe não-técnica, define algumas métricas de resultado, considera o prazo de 2 semanas.
+Nível 4: Arquiteta pipeline de conteúdo automatizado integrando múltiplas ferramentas (geração + publicação + CRM), métricas detalhadas e escalabilidade.
+Nível 5: Visão estratégica completa com A/B testing automatizado, análise de ROI, governança de conteúdo gerado por IA e impacto no posicionamento de marca de longo prazo.` },
     { id:'c2', type:'case', timer:130,
       text:'Sua empresa recebeu 500 currículos para uma vaga de engenheiro sênior. O RH tem 3 dias para fazer a triagem inicial. A diretora de pessoas pediu sua ajuda para usar IA no processo. Que solução você desenharia do início ao fim? Considere os riscos éticos, como mitigá-los e quais critérios seriam avaliados automaticamente vs. por humanos.',
-      criteria:'Critérios de avaliação: (1) Propõe critérios claros para triagem automática vs. revisão humana; (2) Identifica e mitiga riscos de viés algorítmico; (3) Menciona ferramentas ou APIs específicas de forma realista; (4) Considera compliance, LGPD e privacidade de dados; (5) Demonsta pensamento sobre auditabilidade e transparência do processo.' },
+      criteria:`Avalie a resposta considerando os seguintes indicadores por nível:
+Nível 1: Resposta vaga ou sugere usar ChatGPT para "ler os currículos" sem estrutura.
+Nível 2: Propõe triagem básica por palavras-chave com IA, sem considerar riscos ou processo estruturado.
+Nível 3: Define critérios claros para automação vs. revisão humana, menciona ferramentas específicas e cita LGPD ou privacidade.
+Nível 4: Propõe pipeline completo com scoring automatizado, identifica e mitiga viés algorítmico, inclui auditabilidade e logging das decisões.
+Nível 5: Arquitetura robusta com modelo customizado para o perfil da vaga, governança de IA no RH, métricas de qualidade do processo seletivo e compliance total.` },
+    { id:'c3', type:'case', timer:130,
+      text:'Uma startup de e-commerce quer reduzir o tempo de resposta do suporte ao cliente de 8 horas para menos de 5 minutos, sem aumentar o time. Eles têm 2.000 tickets por mês com perguntas sobre pedidos, trocas, pagamentos e reclamações. Como você desenharia uma solução com IA? Quais seriam os riscos e como você os mitigaria?',
+      criteria:`Avalie a resposta considerando os seguintes indicadores por nível:
+Nível 1: Sugere "usar um chatbot" sem detalhar arquitetura, fluxo ou riscos.
+Nível 2: Menciona chatbot com FAQ automático mas sem integração com sistemas da empresa nem tratamento de casos complexos.
+Nível 3: Propõe fluxo com triagem automática de tickets, integração com sistema de pedidos via API, escalamento para humano em casos complexos.
+Nível 4: Arquitetura com agente de IA com acesso a ferramentas (consulta de pedido, emissão de reembolso), memória de contexto, métricas de satisfação e monitoramento em tempo real.
+Nível 5: Sistema completo com aprendizado contínuo, análise de sentimento para priorização, redução de custo por ticket como KPI e estratégia de melhoria contínua baseada em dados.` },
+    { id:'c4', type:'case', timer:130,
+      text:'Você foi contratado como consultor por uma rede de lojas físicas que quer usar IA para aumentar as vendas. Eles têm dados históricos de vendas dos últimos 3 anos, cadastro de clientes e estoque em tempo real. Por onde você começaria? Que solução entregaria nos primeiros 90 dias e o que planejaria para o longo prazo?',
+      criteria:`Avalie a resposta considerando os seguintes indicadores por nível:
+Nível 1: Resposta genérica sobre "usar IA para analisar dados" sem plano concreto.
+Nível 2: Propõe usar IA para relatórios de vendas ou segmentação básica de clientes.
+Nível 3: Define quick wins para 90 dias (ex: recomendação de produto, previsão de demanda), usa dados históricos de forma estruturada, considera integração com estoque.
+Nível 4: Propõe arquitetura de dados completa, modelo preditivo de churn, personalização em escala com segmentação dinâmica e pipeline de ML para previsão de demanda.
+Nível 5: Estratégia de IA para o negócio com roadmap de 12 meses, definição de KPIs de negócio, governança de dados, e como IA transforma o modelo operacional da rede.` },
+  ];
 
-    // ── Review Reverso ─────────────────────────────────────────
+  const REVIEW_POOL = [
     { id:'r1', type:'review', timer:130,
       text:'Analise o prompt abaixo e identifique todos os problemas. Como você o reescreveria para obter um resultado muito melhor?',
       artifact:'Faça um resumo do documento anexo e liste os pontos principais.',
-      criteria:'Critérios de avaliação: (1) Identifica ausência de persona/papel para a IA; (2) Aponta falta de contexto sobre o documento e o objetivo; (3) Identifica ausência de formato de saída definido; (4) Aponta falta de restrições (tamanho, linguagem, público-alvo); (5) Reescreve o prompt com estrutura clara e significativamente melhor.' },
+      criteria:`Avalie a análise e reescrita considerando os seguintes indicadores por nível:
+Nível 1: Não identifica problemas claros ou apenas diz "poderia ser mais específico" sem explicar por quê.
+Nível 2: Identifica 1-2 problemas superficiais (ex: "falta contexto") e reescreve com pequenas melhorias.
+Nível 3: Identifica ausência de persona, contexto do documento, objetivo do resumo e formato de saída. Reescreve com estrutura clara incluindo pelo menos 3 desses elementos.
+Nível 4: Identifica todos os problemas (persona, contexto, tarefa, restrições, formato de saída, público-alvo) e reescreve prompt profissional com todos os elementos presentes.
+Nível 5: Análise completa com justificativa técnica para cada problema, reescrita exemplar com variáveis parametrizáveis e explicação de como cada elemento melhora o resultado.` },
     { id:'r2', type:'review', timer:130,
       text:'Analise o fluxo de automação abaixo e aponte o que pode dar errado. Que salvaguardas você adicionaria?',
       artifact:'1. Usuário envia e-mail\n2. IA lê o conteúdo do e-mail\n3. IA gera uma resposta completa\n4. Sistema envia a resposta automaticamente sem revisão humana',
-      criteria:'Critérios de avaliação: (1) Identifica o risco crítico de envio automático sem revisão humana; (2) Propõe loop de aprovação ou revisão antes do envio; (3) Menciona tratamento de erros e edge cases (spam, conteúdo sensível, e-mails ambíguos); (4) Sugere mecanismo de logging e auditoria; (5) Propõe melhorias de arquitetura como filas, retry e alertas.' },
+      criteria:`Avalie a análise considerando os seguintes indicadores por nível:
+Nível 1: Identifica apenas que "pode errar" ou "precisa de revisão" sem especificar riscos concretos.
+Nível 2: Identifica o risco do envio automático mas propõe apenas "adicionar um humano para revisar" sem detalhar o fluxo.
+Nível 3: Identifica múltiplos riscos (envio indevido, conteúdo sensível, spam, tom inadequado) e propõe loop de aprovação humana antes do envio com critérios claros.
+Nível 4: Análise sistêmica com tratamento de edge cases (e-mails ambíguos, reclamações legais, idiomas), logging de todas as decisões, alertas para casos críticos e mecanismo de retry.
+Nível 5: Propõe arquitetura resiliente completa com filas de mensagem, circuit breaker, monitoramento em tempo real, processo de melhoria contínua baseado em feedback e conformidade com regulações.` },
+    { id:'r3', type:'review', timer:130,
+      text:'Analise o prompt abaixo usado para classificar feedbacks de clientes e aponte os problemas. Como você o melhoraria?',
+      artifact:'Você é um assistente. Classifique este feedback de cliente como positivo, negativo ou neutro:\n\n"{{feedback}}"',
+      criteria:`Avalie a análise considerando os seguintes indicadores por nível:
+Nível 1: Não identifica limitações técnicas, apenas diz que está "bom" ou "poderia ter mais categorias".
+Nível 2: Sugere adicionar mais categorias mas não aborda problemas de consistência, edge cases ou formato de saída estruturado.
+Nível 3: Identifica ausência de exemplos (few-shot), falta de definição das categorias, ausência de instrução de formato de saída (JSON) e propõe versão melhorada com pelo menos 3 dessas melhorias.
+Nível 4: Análise completa incluindo necessidade de few-shot com exemplos ambíguos, output estruturado (JSON com confidence score), tratamento de feedbacks mistos, e instruções anti-alucinação.
+Nível 5: Propõe solução robusta com taxonomia de categorias definida pelo negócio, cadeia de validação, fallback para casos incertos, métricas de acurácia e processo de atualização contínua dos exemplos.` },
+    { id:'r4', type:'review', timer:130,
+      text:'Analise o fluxo abaixo de geração de relatórios com IA e identifique os problemas. O que você mudaria?',
+      artifact:'1. Usuário envia planilha de dados de vendas\n2. IA analisa todos os dados\n3. IA gera relatório completo em PDF\n4. Relatório é enviado automaticamente para a diretoria\n5. Diretoria toma decisões estratégicas com base no relatório',
+      criteria:`Avalie a análise considerando os seguintes indicadores por nível:
+Nível 1: Não identifica riscos de tomada de decisão baseada em IA sem validação, apenas elogia o fluxo.
+Nível 2: Menciona que a IA "pode errar nos dados" mas não propõe processo de validação estruturado.
+Nível 3: Identifica riscos de alucinação em dados numéricos, ausência de validação humana antes de enviar à diretoria, e falta de rastreabilidade das análises. Propõe etapa de revisão.
+Nível 4: Análise completa com riscos de privacidade de dados de vendas, necessidade de reconciliação dos números gerados vs. fonte, log de auditoria, alertas para anomalias e processo de aprovação estruturado.
+Nível 5: Propõe arquitetura com validação automática cruzando com fonte de dados (data warehouse), confiança calibrada por seção do relatório, ciclo de feedback da diretoria para melhoria contínua e governança de IA aplicada a decisões estratégicas.` },
   ];
+
+  // Randomização: 8 MC + 2 cases + 2 reviews
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function buildTestQuestions() {
+    const mcs = shuffle(MC_POOL).slice(0, 8).map(q => ({
+      ...q,
+      options: shuffle(q.options),
+    }));
+    return [
+      ...mcs,
+      ...shuffle(CASE_POOL).slice(0, 2),
+      ...shuffle(REVIEW_POOL).slice(0, 2),
+    ];
+  }
+
+  let TEST_QUESTIONS = [];
 
   let testAnswers  = [];
   let currentQ     = -1;
@@ -1287,7 +1375,9 @@
   let caseSecsLeft = 0;
 
   function startTest() {
+    TEST_QUESTIONS = buildTestQuestions();
     currentQ = 0;
+    testAnswers = [];
     showTestQuestion(0);
   }
 

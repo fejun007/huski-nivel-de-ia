@@ -1037,9 +1037,7 @@
         btn.classList.add('show');
         btn.onclick = () => {
           btn.disabled = true;
-          const screen = document.getElementById('loadingScreen');
-          screen.classList.add('fade-out');
-          setTimeout(onDone, 650);
+          onDone(); // direto no click — mantém o gesto do usuário para o play()
         };
         return;
       }
@@ -1057,35 +1055,28 @@
   const STEP0_TEXT = 'Olá! Seja muito bem-vindo à avaliação de maturidade em IA da Huski. Meu nome é ARIA e vou te acompanhar nessa jornada. Essa avaliação foi criada para mapear exatamente em qual estágio de uso de inteligência artificial você está hoje — sem julgamentos e sem respostas certas ou erradas. Antes de começarmos… como posso te chamar?';
 
   window.addEventListener('load', () => {
-    // Dispara fetch do áudio imediatamente — loading dá tempo de carregar
+    // Pré-carrega o áudio enquanto o loading roda
     fetchAudio(STEP0_TEXT).then(audio => { preloadedAudio = audio; });
 
-    runLoadingScreen(async () => {
-      document.getElementById('loadingScreen').style.display = 'none';
+    runLoadingScreen(() => {
+      // Esta função é chamada DIRETO no onclick do botão — mesmo call stack do gesto
+      // Então play() é permitido pelo browser sem bloqueio de autoplay
 
-      // Garante que o áudio esteja pronto antes de mostrar o orb
       const el  = document.getElementById('speechText');
       const orb = document.getElementById('ariaOrb');
-
-      // Se ainda carregando, aguarda (máx 3s extra)
-      if (!preloadedAudio) {
-        orb?.classList.add('speaking');
-        el.innerHTML = '<span class="cursor-blink"></span>';
-        await new Promise(resolve => {
-          const check = setInterval(() => {
-            if (preloadedAudio !== null) { clearInterval(check); resolve(); }
-          }, 100);
-          setTimeout(() => { clearInterval(check); resolve(); }, 3000);
-        });
-        orb?.classList.remove('speaking');
-      }
-
-      // Dispara áudio + typewriter juntos
       const charsPerMs = STEP0_TEXT.length > 200 ? 28 : 20;
+
+      // Esconde loading e mostra onboarding
+      const screen = document.getElementById('loadingScreen');
+      screen.classList.add('fade-out');
+      setTimeout(() => { screen.style.display = 'none'; }, 700);
+
+      // Play + typewriter disparam juntos no mesmo frame do click
       if (preloadedAudio) {
         orb?.classList.add('speaking');
-        preloadedAudio.play();
+        preloadedAudio.play().catch(() => {});
       }
+
       typeWriter(STEP0_TEXT, el, charsPerMs, () => {
         const inp = document.getElementById('obInputGroup');
         const btn = document.getElementById('btnOb');

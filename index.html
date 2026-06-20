@@ -802,7 +802,14 @@
     btn.classList.remove('show');
 
     const scriptText = extraText || step.text;
-    typeWriter(scriptText, el, 22, () => {
+
+    // Dispara TTS antes do typewriter — áudio chega enquanto texto ainda aparece
+    speak(scriptText);
+
+    // Velocidade proporcional ao texto para durar ~mesma coisa que o áudio
+    const charsPerMs = scriptText.length > 200 ? 28 : 20;
+
+    typeWriter(scriptText, el, charsPerMs, () => {
       // Mostra input/botão após terminar de digitar
       if (step.inputType) {
         if (step.inputType === 'textarea') {
@@ -828,8 +835,6 @@
         }, 200);
       }
     });
-
-    speak(scriptText);
   }
 
   async function obNext() {

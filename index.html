@@ -753,49 +753,35 @@
   // ── TTS via Gemini 2.5 Flash (backend) ───────────────────────
   let currentAudio = null;
 
-  async function speak(text, onEnd) {
-    // Cancela áudio anterior se houver
-    if (currentAudio) {
-      currentAudio.pause();
-      currentAudio = null;
-    }
+  function stopAudio() {
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  }
 
-    const orb = document.getElementById('ariaOrb');
-    orb?.classList.add('speaking');
-
+  // Pré-carrega o áudio e retorna o objeto Audio pronto para play()
+  async function fetchAudio(text) {
+    stopAudio();
     try {
       const res = await fetch(`${API_BASE}/tts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text }),
       });
-
-      if (!res.ok) throw new Error('TTS falhou');
-
+      if (!res.ok) return null;
       const blob = await res.blob();
       const url  = URL.createObjectURL(blob);
       const audio = new Audio(url);
+      // Pré-carrega o buffer
+      await new Promise((resolve, reject) => {
+        audio.oncanplaythrough = resolve;
+        audio.onerror = reject;
+        audio.load();
+      });
+      const orb = document.getElementById('ariaOrb');
+      audio.onended = () => { orb?.classList.remove('speaking'); URL.revokeObjectURL(url); currentAudio = null; };
+      audio.onerror = () => { orb?.classList.remove('speaking'); URL.revokeObjectURL(url); currentAudio = null; };
       currentAudio = audio;
-
-      audio.onended = () => {
-        orb?.classList.remove('speaking');
-        URL.revokeObjectURL(url);
-        currentAudio = null;
-        onEnd?.();
-      };
-      audio.onerror = () => {
-        orb?.classList.remove('speaking');
-        URL.revokeObjectURL(url);
-        currentAudio = null;
-        onEnd?.();
-      };
-
-      await audio.play();
-    } catch (e) {
-      // Fallback silencioso — typewriter continua normalmente
-      orb?.classList.remove('speaking');
-      onEnd?.();
-    }
+      return audio;
+    } catch { return null; }
   }
 
   // ── Typewriter ────────────────────────────────────────────────
@@ -858,38 +844,47 @@
     btn.classList.remove('show');
 
     const scriptText = extraText || step.text;
+    const orb = document.getElementById('ariaOrb');
 
-    // Dispara TTS antes do typewriter — áudio chega enquanto texto ainda aparece
-    speak(scriptText);
+    // Orb pulsa enquanto busca o áudio
+    orb?.classList.add('speaking');
+    el.innerHTML = '<span class="cursor-blink"></span>';
 
-    // Velocidade proporcional ao texto para durar ~mesma coisa que o áudio
     const charsPerMs = scriptText.length > 200 ? 28 : 20;
 
-    typeWriter(scriptText, el, charsPerMs, () => {
-      // Mostra input/botão após terminar de digitar
-      if (step.inputType) {
-        if (step.inputType === 'textarea') {
-          inp.innerHTML = `<textarea class="ob-input" id="obInput" rows="3"
-            placeholder="${step.placeholder}"
-            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();obNext()}"></textarea>`;
-        } else {
-          inp.innerHTML = `<input class="ob-input" type="text" id="obInput"
-            placeholder="${step.placeholder}" maxlength="80"
-            onkeydown="if(event.key==='Enter') obNext()" />`;
-        }
-        setTimeout(() => {
-          inp.classList.add('show');
-          btn.textContent = step.btn;
-          btn.classList.add('show');
-          document.getElementById('obInput')?.focus();
-        }, 200);
-      } else {
-        inp.classList.remove('show');
-        setTimeout(() => {
-          btn.textContent = step.btn;
-          btn.classList.add('show');
-        }, 200);
+    // Espera áudio pronto, depois dispara play() + typeWriter() simultaneamente
+    fetchAudio(scriptText).then(audioObj => {
+      orb?.classList.remove('speaking');
+      if (audioObj) {
+        orb?.classList.add('speaking');
+        audioObj.play();
       }
+      typeWriter(scriptText, el, charsPerMs, () => {
+        // Mostra input/botão após terminar de digitar
+        if (step.inputType) {
+          if (step.inputType === 'textarea') {
+            inp.innerHTML = `<textarea class="ob-input" id="obInput" rows="3"
+              placeholder="${step.placeholder}"
+              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();obNext()}"></textarea>`;
+          } else {
+            inp.innerHTML = `<input class="ob-input" type="text" id="obInput"
+              placeholder="${step.placeholder}" maxlength="80"
+              onkeydown="if(event.key==='Enter') obNext()" />`;
+          }
+          setTimeout(() => {
+            inp.classList.add('show');
+            btn.textContent = step.btn;
+            btn.classList.add('show');
+            document.getElementById('obInput')?.focus();
+          }, 200);
+        } else {
+          inp.classList.remove('show');
+          setTimeout(() => {
+            btn.textContent = step.btn;
+            btn.classList.add('show');
+          }, 200);
+        }
+      });
     });
   }
 

@@ -1299,40 +1299,29 @@
 
   const MC_POOL = [
     { id:'q1', type:'mc', text:'Com que frequência você usa ferramentas de IA no seu trabalho?',
-      options:['Raramente ou nunca','Algumas vezes por semana','Todos os dias para tarefas pontuais','É parte central do meu fluxo de trabalho diário','Construo soluções de IA para outros usarem'],
-      correctIndex:4, difficulty:'facil' },
+      options:['Raramente ou nunca','Algumas vezes por semana','Todos os dias para tarefas pontuais','É parte central do meu fluxo de trabalho diário','Construo soluções de IA para outros usarem'] },
     { id:'q2', type:'mc', text:'Como você escreve suas instruções (prompts) para a IA?',
-      options:['Frases curtas e diretas, sem estrutura','Defino persona, contexto e formato de saída esperado','Crio System Prompts com variáveis e instruções complexas','Desenvolvo prompts de orquestração para agentes autônomos','O prompt é secundário — foco em fine-tuning e arquitetura de modelos'],
-      correctIndex:4, difficulty:'facil' },
+      options:['Frases curtas e diretas, sem estrutura','Defino persona, contexto e formato de saída esperado','Crio System Prompts com variáveis e instruções complexas','Desenvolvo prompts de orquestração para agentes autônomos','O prompt é secundário — foco em fine-tuning e arquitetura de modelos'] },
     { id:'q3', type:'mc', text:'Qual é o seu nível de uso de automação com IA?',
-      options:['Não uso automações','Uso ferramentas prontas (Zapier básico, integrações nativas)','Crio automações no-code/low-code (n8n, Make, Zapier avançado)','Desenvolvo agentes autônomos com LangChain, CrewAI ou similares','Arquiteto sistemas multi-agente em produção'],
-      correctIndex:4, difficulty:'facil' },
+      options:['Não uso automações','Uso ferramentas prontas (Zapier básico, integrações nativas)','Crio automações no-code/low-code (n8n, Make, Zapier avançado)','Desenvolvo agentes autônomos com LangChain, CrewAI ou similares','Arquiteto sistemas multi-agente em produção'] },
     { id:'q4', type:'mc', text:'Como você lida com alucinações e erros das IAs?',
-      options:['Aceito as respostas sem questionar muito','Sempre verifico informações críticas em outras fontes','Implemento loops de validação e tratamento de erros nos meus fluxos','Desenvolvo benchmarks próprios para avaliar qualidade em escala','Defino métricas e governança de qualidade de IA para toda a organização'],
-      correctIndex:4, difficulty:'facil' },
+      options:['Aceito as respostas sem questionar muito','Sempre verifico informações críticas em outras fontes','Implemento loops de validação e tratamento de erros nos meus fluxos','Desenvolvo benchmarks próprios para avaliar qualidade em escala','Defino métricas e governança de qualidade de IA para toda a organização'] },
     { id:'q5', type:'mc', multi:true, text:'Qual das ações abaixo você já realizou? (selecione todas que se aplicam)',
       options:['Usei ChatGPT para escrever textos ou tirar dúvidas','Integrei IA a planilhas, e-mails ou ferramentas do dia a dia','Conectei APIs de LLMs a outras ferramentas via código ou plataformas no-code','Implementei RAG (busca em documentos próprios) ou function calling','Fiz fine-tuning de um modelo de linguagem aberto'] },
     { id:'q6', type:'mc', text:'Como a IA impacta seu trabalho hoje?',
-      options:['Pouco ou nenhum impacto ainda','Me ajuda a fazer tarefas existentes mais rápido','Automatizou processos inteiros, liberando tempo para estratégia','Criei novos produtos ou serviços que não existiriam sem IA','Influencio a estratégia de IA da minha organização ou mercado'],
-      correctIndex:4, difficulty:'facil' },
+      options:['Pouco ou nenhum impacto ainda','Me ajuda a fazer tarefas existentes mais rápido','Automatizou processos inteiros, liberando tempo para estratégia','Criei novos produtos ou serviços que não existiriam sem IA','Influencio a estratégia de IA da minha organização ou mercado'] },
     { id:'q7', type:'mc', text:'Qual conceito ou ferramenta você domina melhor?',
-      options:['ChatGPT, Gemini, Claude (interfaces web)','Engenharia de prompt: few-shot, chain-of-thought, role prompting','APIs de LLMs, embeddings, bancos vetoriais','Agentes autônomos, RAG, function calling, orquestração multi-agente','Fine-tuning, RLHF, hiperparâmetros e arquitetura de modelos'],
-      correctIndex:4, difficulty:'facil' },
+      options:['ChatGPT, Gemini, Claude (interfaces web)','Engenharia de prompt: few-shot, chain-of-thought, role prompting','APIs de LLMs, embeddings, bancos vetoriais','Agentes autônomos, RAG, function calling, orquestração multi-agente','Fine-tuning, RLHF, hiperparâmetros e arquitetura de modelos'] },
     { id:'q8', type:'mc', text:'Quando usa IA para resolver um problema complexo, como costuma agir?',
-      options:['Peço a resposta diretamente e uso o que vier','Faço múltiplas tentativas refinando o prompt até ficar bom','Estruturo uma cadeia de prompts ou crio um fluxo automatizado','Delego sub-tarefas a agentes especializados com memória e ferramentas','Defino a arquitetura do sistema, escolho os modelos e cuido da infraestrutura'],
-      correctIndex:4, difficulty:'facil' },
+      options:['Peço a resposta diretamente e uso o que vier','Faço múltiplas tentativas refinando o prompt até ficar bom','Estruturo uma cadeia de prompts ou crio um fluxo automatizado','Delego sub-tarefas a agentes especializados com memória e ferramentas','Defino a arquitetura do sistema, escolho os modelos e cuido da infraestrutura'] },
     { id:'q9', type:'mc', text:'Como você avalia a qualidade das respostas que a IA gera?',
-      options:['Pela intuição — se parece certo, uso','Comparo com fontes externas para validar o conteúdo','Tenho critérios definidos e processo de revisão estruturado','Uso métricas automáticas (BLEU, ROUGE, LLM-as-judge) integradas ao pipeline','Desenvolvo e mantenho benchmarks próprios com casos de teste específicos do negócio'],
-      correctIndex:4, difficulty:'facil' },
+      options:['Pela intuição — se parece certo, uso','Comparo com fontes externas para validar o conteúdo','Tenho critérios definidos e processo de revisão estruturado','Uso métricas automáticas (BLEU, ROUGE, LLM-as-judge) integradas ao pipeline','Desenvolvo e mantenho benchmarks próprios com casos de teste específicos do negócio'] },
     { id:'q10', type:'mc', text:'Como você lida com dados sensíveis ou confidenciais ao usar IA?',
-      options:['Não penso muito nisso','Evito colar dados sensíveis nas ferramentas','Uso ferramentas com políticas claras de privacidade e termos corporativos','Implemento anonimização, mascaramento de dados e controles de acesso','Defino políticas de governança de dados de IA para toda a organização'],
-      correctIndex:4, difficulty:'facil' },
+      options:['Não penso muito nisso','Evito colar dados sensíveis nas ferramentas','Uso ferramentas com políticas claras de privacidade e termos corporativos','Implemento anonimização, mascaramento de dados e controles de acesso','Defino políticas de governança de dados de IA para toda a organização'] },
     { id:'q11', type:'mc', text:'Qual é sua experiência com personalização de modelos de IA?',
-      options:['Nunca personalizei — uso modelos prontos como são','Ajustei configurações básicas como temperatura e system prompt','Criei GPTs, assistentes customizados ou conectores com APIs próprias','Implementei RAG com dados proprietários ou fine-tuning supervisionado leve','Realizei fine-tuning completo, RLHF ou treinamento de modelos especialistas'],
-      correctIndex:4, difficulty:'facil' },
+      options:['Nunca personalizei — uso modelos prontos como são','Ajustei configurações básicas como temperatura e system prompt','Criei GPTs, assistentes customizados ou conectores com APIs próprias','Implementei RAG com dados proprietários ou fine-tuning supervisionado leve','Realizei fine-tuning completo, RLHF ou treinamento de modelos especialistas'] },
     { id:'q12', type:'mc', text:'Como você enxerga o papel da IA na estratégia da sua organização?',
-      options:['Ainda não é relevante para o meu trabalho','É uma ferramenta de produtividade individual','É um driver de eficiência operacional em processos-chave','É um diferencial competitivo que cria novos produtos e modelos de negócio','É um ativo estratégico central que redefine o core business da empresa'],
-      correctIndex:4, difficulty:'facil' },
+      options:['Ainda não é relevante para o meu trabalho','É uma ferramenta de produtividade individual','É um driver de eficiência operacional em processos-chave','É um diferencial competitivo que cria novos produtos e modelos de negócio','É um ativo estratégico central que redefine o core business da empresa'] },
   ];
 
   const ADV_MC_POOL = [
@@ -1678,28 +1667,39 @@ Nível 5: Tudo do nível 4, mais propõe mitigação completa: sandbox sem acess
     return DIFFICULTY_TIERS[Math.max(i - 1, 0)];
   }
 
-  const ALL_MC_POOL = [...MC_POOL.filter(q => !q.multi), ...ADV_MC_POOL];
-
   let usedMcIds = new Set();
 
   function pickNextMCQuestion(difficulty) {
-    const pool = ALL_MC_POOL.filter(q => q.difficulty === difficulty);
+    const pool = ADV_MC_POOL.filter(q => q.difficulty === difficulty);
     const candidates = pool.filter(q => !usedMcIds.has(q.id));
     const chosen = shuffle(candidates.length ? candidates : pool)[0];
     usedMcIds.add(chosen.id);
     return shuffleOptionsKeepingCorrect(chosen);
   }
 
-  const TOTAL_MC = 11;
+  const SELF_EVAL_COUNT = 5;
+  const ADAPTIVE_COUNT  = 6;
+  const ADAPTIVE_START  = SELF_EVAL_COUNT;
+  const ADAPTIVE_END    = ADAPTIVE_START + ADAPTIVE_COUNT;
 
   function buildTestQuestions() {
     usedMcIds = new Set();
     currentDifficulty = 'facil';
-    const slots = new Array(TOTAL_MC).fill(null);
-    slots[0] = pickNextMCQuestion('facil');
-    slots[1] = pickNextMCQuestion('facil');
+
+    // 5 perguntas aleatórias de autoavaliação (q1 a q12, sem dificuldade adaptativa)
+    const selfEval = shuffle(MC_POOL).slice(0, SELF_EVAL_COUNT).map(q => ({
+      ...q,
+      options: shuffle(q.options),
+    }));
+
+    // 6 perguntas técnicas adaptativas (fácil/média/difícil) — as 2 primeiras são fáceis (calibração)
+    const adaptiveSlots = new Array(ADAPTIVE_COUNT).fill(null);
+    adaptiveSlots[0] = pickNextMCQuestion('facil');
+    adaptiveSlots[1] = pickNextMCQuestion('facil');
+
     return [
-      ...slots,
+      ...selfEval,
+      ...adaptiveSlots,
       ...shuffle(CASE_POOL).slice(0, 2),
       ...shuffle(REVIEW_POOL).slice(0, 2),
     ];
@@ -1887,7 +1887,8 @@ Nível 5: Tudo do nível 4, mais propõe mitigação completa: sandbox sem acess
 
     const q = TEST_QUESTIONS[currentQ];
     const label = String.fromCharCode(65 + optIdx);
-    const correct = optIdx === q.correctIndex;
+    const isAdaptive = q.correctIndex !== undefined;
+    const correct = isAdaptive ? (optIdx === q.correctIndex) : null;
     testAnswers.push({
       question_id: qId, question_type: 'mc', question_text: q.text, answer_text: optText,
       option_label: label, criteria: q.criteria || null,
@@ -1897,7 +1898,7 @@ Nível 5: Tudo do nível 4, mais propõe mitigação completa: sandbox sem acess
     appendUserMsg(`${label}) ${optText}`);
 
     const nextIdx = currentQ + 1;
-    if (nextIdx < TOTAL_MC && nextIdx >= 2) {
+    if (isAdaptive && nextIdx < ADAPTIVE_END && (currentQ - ADAPTIVE_START) >= 1) {
       currentDifficulty = nextDifficulty(currentDifficulty, correct);
       TEST_QUESTIONS[nextIdx] = pickNextMCQuestion(currentDifficulty);
     }

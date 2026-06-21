@@ -866,10 +866,12 @@
   let obStep = 0;
   let ttsReady = false;
 
-  // ── Integração externa: sessão pode vir de outra aplicação via ?session_id=&nome= ──
+  // ── Integração externa: sessão pode vir de outra aplicação via ?session_id=&nome=&email=&cpf= ──
   const urlParams = new URLSearchParams(window.location.search);
   let currentSessionId = urlParams.get('session_id') || null;
   const externalNome = urlParams.get('nome') || null;
+  const externalEmail = urlParams.get('email') || null;
+  const externalCpf   = urlParams.get('cpf') || null;
   if (externalNome) {
     document.addEventListener('DOMContentLoaded', () => {
       const obIn = document.getElementById('obInput');
@@ -1077,7 +1079,7 @@
           const r = await fetch(`${API_BASE}/session/create`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nome: userName, resposta_inicial: iaExperience }),
+            body: JSON.stringify({ nome: userName, resposta_inicial: iaExperience, email: externalEmail, cpf: externalCpf }),
           });
           const data = await r.json();
           currentSessionId = data.session_id || null;
@@ -1920,6 +1922,7 @@ Nível 5: Tudo do nível 4, mais propõe mitigação completa: sandbox sem acess
       question_id: qId,
       question_type: type,
       question_text: q.text,
+      artifact: q.artifact || null,
       answer_text: val,
       criteria: q.criteria || null,
     });
@@ -2007,7 +2010,7 @@ Nível 5: Tudo do nível 4, mais propõe mitigação completa: sandbox sem acess
       const res = await fetch(`${API_BASE}/nivel-ia/evaluate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome: userName, answers: testAnswers, session_id: currentSessionId }),
+        body: JSON.stringify({ nome: userName, answers: testAnswers, session_id: currentSessionId, email: externalEmail, cpf: externalCpf }),
       });
       if (!res.ok) throw new Error(await res.text());
       const result = await res.json();

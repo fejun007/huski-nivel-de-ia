@@ -1462,6 +1462,69 @@
       ],
       criteria:'Pergunta técnica objetiva com resposta correta única. Resposta correta: a alternativa que descreve cláusulas de IP Indemnification e validação de datasets de fine-tuning. Se o candidato não selecionar essa alternativa, o gabarito deve indicar a resposta certa e explicar por que a escolhida está incorreta.',
       correctIndex:1, difficulty:'dificil' },
+    { id:'q28', type:'mc', text:'Qual das alternativas abaixo apresenta apenas ferramentas de IA Generativa focadas na criação de textos e conversas?',
+      options:[
+        'ChatGPT, Gemini e Claude.',
+        'Photoshop, Excel e Windows.',
+        'Spotify, Netflix e Instagram.',
+        'Google Drive, Dropbox e iCloud.',
+      ],
+      criteria:'Pergunta técnica objetiva com resposta correta única. Resposta correta: ChatGPT, Gemini e Claude. Se o candidato não selecionar essa alternativa, o gabarito deve indicar a resposta certa e explicar por que a escolhida está incorreta.',
+      correctIndex:0, difficulty:'facil' },
+    { id:'q29', type:'mc', text:'O que é um "Prompt" no contexto de ferramentas como o ChatGPT?',
+      options:[
+        'O nome do processador físico que roda o sistema de inteligência artificial.',
+        'Um vírus de computador que pode contaminar os servidores da OpenAI.',
+        'A instrução, comando ou texto que o usuário digita para pedir algo à IA.',
+        'O botão de salvar o histórico de conversas no navegador.',
+      ],
+      criteria:'Pergunta técnica objetiva com resposta correta única. Resposta correta: a instrução/comando/texto que o usuário digita para pedir algo à IA. Se o candidato não selecionar essa alternativa, o gabarito deve indicar a resposta certa e explicar por que a escolhida está incorreta.',
+      correctIndex:2, difficulty:'facil' },
+    { id:'q30', type:'mc', text:'Quando dizemos que uma inteligência artificial "alucinou", o que isso significa na prática?',
+      options:[
+        'Que ela começou a falar em voz alta através das caixas de som do computador.',
+        'Que o sistema caiu e ficou fora do ar devido ao excesso de acessos.',
+        'Que ela inventou uma informação falsa, mas a apresentou como se fosse um fato real.',
+        'Que o robô atingiu a consciência humana e se recusou a trabalhar.',
+      ],
+      criteria:'Pergunta técnica objetiva com resposta correta única. Resposta correta: a IA inventou uma informação falsa e a apresentou como fato real. Se o candidato não selecionar essa alternativa, o gabarito deve indicar a resposta certa e explicar por que a escolhida está incorreta.',
+      correctIndex:2, difficulty:'facil' },
+    { id:'q31', type:'mc', text:'Qual é a forma mais recomendada para um usuário iniciante conseguir um texto de melhor qualidade ao interagir com uma LLM (modelo de linguagem)?',
+      options:[
+        'Digitar o prompt inteiro usando letras maiúsculas e muitos pontos de exclamação.',
+        'Repetir a mesma palavra dezenas de vezes para forçar o algoritmo a entender.',
+        'Dar contexto à IA, explicando o cenário, quem ela representa (persona) e o formato de saída desejado.',
+        'Desligar e ligar o roteador de internet antes de enviar a pergunta.',
+      ],
+      criteria:'Pergunta técnica objetiva com resposta correta única. Resposta correta: dar contexto, persona e formato de saída desejado à IA. Se o candidato não selecionar essa alternativa, o gabarito deve indicar a resposta certa e explicar por que a escolhida está incorreta.',
+      correctIndex:2, difficulty:'facil' },
+    { id:'q32', type:'mc', text:'Se você precisar que a IA crie uma tabela comparativa organizando dados textuais que você enviou, como você deve agir no chat?',
+      options:[
+        'Você não deve pedir isso, pois as IAs textuais só conseguem escrever e-mails em formato de parágrafo tradicional.',
+        'Você deve pedir claramente no prompt para ela organizar as informações em formato de tabela ou colunas.',
+        'Você precisa programar uma linha de código em Python para que a IA consiga desenhar uma linha na tela.',
+        'Você deve tirar um print da tela e desenhar as linhas da tabela manualmente usando o Paint.',
+      ],
+      criteria:'Pergunta técnica objetiva com resposta correta única. Resposta correta: pedir claramente no prompt para organizar as informações em formato de tabela ou colunas. Se o candidato não selecionar essa alternativa, o gabarito deve indicar a resposta certa e explicar por que a escolhida está incorreta.',
+      correctIndex:1, difficulty:'facil' },
+    { id:'q33', type:'mc', text:'Para tarefas do cotidiano corporativo, qual o principal risco de um funcionário colar dados confidenciais de clientes (como nomes e CPFs) em ferramentas gratuitas de IA públicas?',
+      options:[
+        'O computador do funcionário travar imediatamente devido ao peso dos dados.',
+        'A IA começar a ligar para os clientes fazendo cobranças indevidas automaticamente.',
+        'Esses dados serem enviados para servidores externos e potencialmente usados para treinar os modelos públicos daquela empresa de IA, gerando vazamento de informação.',
+        'Os dados serem apagados para sempre da planilha original do funcionário.',
+      ],
+      criteria:'Pergunta técnica objetiva com resposta correta única. Resposta correta: risco de vazamento de dados ao enviá-los para servidores externos que podem usá-los para treinar modelos públicos. Se o candidato não selecionar essa alternativa, o gabarito deve indicar a resposta certa e explicar por que a escolhida está incorreta.',
+      correctIndex:2, difficulty:'facil' },
+    { id:'q34', type:'mc', text:'Qual das seguintes tarefas uma IA Generativa de texto tradicional realiza com maior facilidade e menor chance de erro no dia a dia?',
+      options:[
+        'Resumir um texto longo, corrigir a gramática de um e-mail ou traduzir um artigo.',
+        'Prever com 100% de precisão os números que vão sair na loteria na próxima semana.',
+        'Tomar decisões jurídicas e assinar contratos oficiais de forma autônoma sem revisão humana.',
+        'Operar e consertar o hardware físico de um computador que quebrou a tela.',
+      ],
+      criteria:'Pergunta técnica objetiva com resposta correta única. Resposta correta: resumir texto, corrigir gramática ou traduzir um artigo. Se o candidato não selecionar essa alternativa, o gabarito deve indicar a resposta certa e explicar por que a escolhida está incorreta.',
+      correctIndex:0, difficulty:'facil' },
   ];
 
   const CASE_POOL = [
@@ -1671,10 +1734,25 @@ Nível 5: Tudo do nível 4, mais propõe mitigação completa: sandbox sem acess
 
   let usedMcIds = new Set();
 
+  // Nunca repete uma pergunta já usada na mesma avaliação. Se o tier de dificuldade
+  // pedido já estiver esgotado, busca em tiers vizinhos antes de cair no pool inteiro.
   function pickNextMCQuestion(difficulty) {
-    const pool = ADV_MC_POOL.filter(q => q.difficulty === difficulty);
-    const candidates = pool.filter(q => !usedMcIds.has(q.id));
-    const chosen = shuffle(candidates.length ? candidates : pool)[0];
+    const tierOrder = {
+      facil:   ['facil', 'media', 'dificil'],
+      media:   ['media', 'facil', 'dificil'],
+      dificil: ['dificil', 'media', 'facil'],
+    }[difficulty];
+
+    let candidates = [];
+    for (const tier of tierOrder) {
+      candidates = ADV_MC_POOL.filter(q => q.difficulty === tier && !usedMcIds.has(q.id));
+      if (candidates.length) break;
+    }
+    if (!candidates.length) {
+      candidates = ADV_MC_POOL.filter(q => !usedMcIds.has(q.id));
+    }
+
+    const chosen = shuffle(candidates)[0];
     usedMcIds.add(chosen.id);
     return shuffleOptionsKeepingCorrect(chosen);
   }

@@ -268,14 +268,26 @@
     border: 1px solid var(--border);
     border-top: 3px solid var(--pulse);
     border-radius: 16px;
-    padding: 32px;
-    max-width: 560px;
+    padding: 32px 40px;
+    max-width: 1080px;
     width: 100%;
     max-height: 90dvh;
     overflow-y: auto;
     animation: card-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
     scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;
+  }
+  .result-top-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  @media (min-width: 760px) {
+    .result-top-grid {
+      grid-template-columns: 280px 1fr;
+      align-items: start;
+    }
+    .result-score-big { margin-top: 0; }
   }
   @keyframes card-in {
     from { opacity: 0; transform: translateY(24px) scale(0.97); }
@@ -406,10 +418,15 @@
   }
 
   .result-questions-list {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr;
     gap: 12px;
     margin-bottom: 20px;
+  }
+  @media (min-width: 760px) {
+    .result-questions-list {
+      grid-template-columns: 1fr 1fr;
+    }
   }
   .result-question-card {
     border: 1px solid var(--border);
@@ -2250,27 +2267,33 @@ Nível 5: Tudo do nível 4, mais propõe mitigação completa: sandbox sem acess
     }).join('');
 
     card.innerHTML = `
-      <div class="result-level-badge">
-        <span class="level-num">NÍVEL ${nivel}</span>
-        <span class="level-name">${escapeHtml(titulo)}</span>
+      <div class="result-top-grid">
+        <div>
+          <div class="result-level-badge">
+            <span class="level-num">NÍVEL ${nivel}</span>
+            <span class="level-name">${escapeHtml(titulo)}</span>
+          </div>
+
+          <div class="result-score-big">${nivel}<span style="font-size:32px;color:var(--muted)">/5</span></div>
+          <div class="result-score-label">nível de maturidade em IA</div>
+
+          <div class="dim-bar-track" style="margin:16px 0 24px;">
+            <div class="dim-bar-fill" style="width:0%;background:${barColor};" data-target="${pct}"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="result-section-title">Análise</div>
+          <div class="result-desc">${escapeHtml(resumo)}</div>
+
+          <div class="result-section-title" style="margin-top:20px;">Próximos passos</div>
+          <ul class="result-list">${passos.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>
+        </div>
       </div>
-
-      <div class="result-score-big">${nivel}<span style="font-size:32px;color:var(--muted)">/5</span></div>
-      <div class="result-score-label">nível de maturidade em IA</div>
-
-      <div class="dim-bar-track" style="margin:16px 0 24px;">
-        <div class="dim-bar-fill" style="width:0%;background:${barColor};" data-target="${pct}"></div>
-      </div>
-
-      <div class="result-section-title">Análise</div>
-      <div class="result-desc">${escapeHtml(resumo)}</div>
 
       ${questoesHtml ? `
-      <div class="result-section-title" style="margin-top:20px;">Detalhamento por questão</div>
+      <div class="result-section-title" style="margin-top:8px;">Detalhamento por questão</div>
       <div class="result-questions-list">${questoesHtml}</div>` : ''}
-
-      <div class="result-section-title" style="margin-top:20px;">Próximos passos</div>
-      <ul class="result-list">${passos.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>
 
       <div class="result-actions">
         <button class="btn-restart" onclick="restart()">Refazer avaliação</button>

@@ -340,6 +340,33 @@
     margin-bottom: 28px;
   }
 
+  .result-score-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+  }
+  .result-score-breakdown > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    color: var(--fog);
+  }
+  .result-score-breakdown strong {
+    color: var(--white);
+    font-weight: 600;
+  }
+  .result-score-breakdown-final {
+    margin-top: 4px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+    color: var(--pulse) !important;
+  }
+  .result-score-breakdown-final strong {
+    color: var(--pulse) !important;
+  }
+
   .result-section-title {
     font-family: 'DM Mono', monospace;
     font-size: 11px;
@@ -1749,6 +1776,16 @@ Nível 5: Tudo do nível 4, mais propõe mitigação completa: sandbox sem acess
     return DIFFICULTY_TIERS[Math.max(i - 1, 0)];
   }
 
+  // Embaralha as opções de autoavaliação preservando o nível (1-5) que cada uma representa
+  // na ordem original em que foi escrita (options[0] = nível 1 ... options[4] = nível 5).
+  function shuffleSelfEvalOptions(q) {
+    const idx = q.options.map((_, i) => i);
+    const shuffledIdx = shuffle(idx);
+    const options = shuffledIdx.map(i => q.options[i]);
+    const levels = shuffledIdx.map(i => i + 1);
+    return { ...q, options, levels };
+  }
+
   let usedMcIds = new Set();
 
   // Nunca repete uma pergunta já usada na mesma avaliação. Se o tier de dificuldade
@@ -1784,10 +1821,7 @@ Nível 5: Tudo do nível 4, mais propõe mitigação completa: sandbox sem acess
     currentDifficulty = 'facil';
 
     // 5 perguntas aleatórias de autoavaliação (q1 a q12, sem dificuldade adaptativa)
-    const selfEval = shuffle(MC_POOL).slice(0, SELF_EVAL_COUNT).map(q => ({
-      ...q,
-      options: shuffle(q.options),
-    }));
+    const selfEval = shuffle(MC_POOL).slice(0, SELF_EVAL_COUNT).map(shuffleSelfEvalOptions);
 
     // 6 perguntas técnicas adaptativas (fácil/média/difícil) — as 2 primeiras são fáceis (calibração)
     const adaptiveSlots = new Array(ADAPTIVE_COUNT).fill(null);
@@ -1966,11 +2000,15 @@ Nível 5: Tudo do nível 4, mais propõe mitigação completa: sandbox sem acess
     const q = TEST_QUESTIONS[currentQ];
     const labels = [...multiSelected].sort().map(i => String.fromCharCode(65 + i));
     const texts  = [...multiSelected].sort().map(i => q.options[i]);
+    const selfLevel = q.levels
+      ? Math.round([...multiSelected].reduce((sum, i) => sum + q.levels[i], 0) / multiSelected.size)
+      : null;
     testAnswers.push({
       question_id: qId, question_type: 'mc',
       question_text: q.text,
       answer_text: texts.join('; '),
       option_label: labels.join(', '),
+      self_level: selfLevel,
     });
     appendUserMsg(labels.map((l, i) => `${l}) ${texts[i]}`).join('\n'));
     multiSelected.clear();
@@ -1986,10 +2024,12 @@ Nível 5: Tudo do nível 4, mais propõe mitigação completa: sandbox sem acess
     const label = String.fromCharCode(65 + optIdx);
     const isAdaptive = q.correctIndex !== undefined;
     const correct = isAdaptive ? (optIdx === q.correctIndex) : null;
+    const selfLevel = (!isAdaptive && q.levels) ? q.levels[optIdx] : null;
     testAnswers.push({
       question_id: qId, question_type: 'mc', question_text: q.text, answer_text: optText,
       option_label: label, criteria: q.criteria || null,
       is_correct: correct, difficulty: q.difficulty || null,
+      self_level: selfLevel,
     });
 
     appendUserMsg(`${label}) ${optText}`);
@@ -2246,6 +2286,16 @@ Nível 5: Tudo do nível 4, mais propõe mitigação completa: sandbox sem acess
 
     const tipoLabel = { mc: 'Múltipla Escolha', case: 'Case', review: 'Review Reverso' };
 
+    const pontos = result.pontuacao || null;
+    const pontuacaoHtml = pontos ? `
+      <div class="result-section-title" style="margin-top:16px;">Composição da nota</div>
+      <div class="result-score-breakdown">
+        ${pontos.self_eval_score != null ? `<div><span>Autoavaliação</span><strong>${pontos.self_eval_score} / 5</strong></div>` : ''}
+        ${pontos.tech_score != null ? `<div><span>Técnicas adaptativas${pontos.tech_pontos ? ` (${pontos.tech_pontos} pts)` : ''}</span><strong>${pontos.tech_score} / 5</strong></div>` : ''}
+        ${pontos.case_review_score != null ? `<div><span>Cases &amp; Reviews</span><strong>${pontos.case_review_score} / 5</strong></div>` : ''}
+        <div class="result-score-breakdown-final"><span>Nota final ponderada</span><strong>${pontos.final_score} / 5</strong></div>
+      </div>` : '';
+
     const questoesHtml = questoes.map((q, idx) => {
       const tipo = tipoLabel[q.tipo] || q.tipo || '';
       if (q.tipo === 'mc') {
@@ -2280,6 +2330,8 @@ Nível 5: Tudo do nível 4, mais propõe mitigação completa: sandbox sem acess
           <div class="dim-bar-track" style="margin:16px 0 24px;">
             <div class="dim-bar-fill" style="width:0%;background:${barColor};" data-target="${pct}"></div>
           </div>
+
+          ${pontuacaoHtml}
         </div>
 
         <div>
